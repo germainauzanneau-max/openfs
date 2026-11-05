@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>OpenFS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:light;
+  --bg:#FBFBFD; --ink:#0A0A2E; --ink2:#55586F; --ink3:#9A9CB0; --hair:rgba(10,10,46,.08); --fill:rgba(10,10,46,.04); --fill2:rgba(10,10,46,.07);
+  --geo:#6A55E8; --gen:#14A08F; --asset:#E0962A; --liq:#E0577F; --accent:#323CAA;
+  --glass:rgba(255,255,255,.72);
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;
+  --bg:#05051A; --ink:#F4F4FA; --ink2:#A9ABC4; --ink3:#6B6E8C; --hair:rgba(255,255,255,.09); --fill:rgba(255,255,255,.045); --fill2:rgba(255,255,255,.08);
+  --geo:#A99BFF; --gen:#5FE0CD; --asset:#FFC36B; --liq:#FF8DB0; --accent:#AA96FF; --glass:rgba(10,10,40,.6);}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#05051A; --ink:#F4F4FA; --ink2:#A9ABC4; --ink3:#6B6E8C; --hair:rgba(255,255,255,.09); --fill:rgba(255,255,255,.045); --fill2:rgba(255,255,255,.08);
+  --geo:#A99BFF; --gen:#5FE0CD; --asset:#FFC36B; --liq:#FF8DB0; --accent:#AA96FF; --glass:rgba(10,10,40,.6);}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",Inter,"Segoe UI",system-ui,sans-serif;font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;letter-spacing:-.006em;overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:10px}
+.top{position:fixed;top:env(safe-area-inset-top,0px);left:0;right:0;height:56px;display:flex;align-items:center;padding:0 28px;z-index:10;backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);background:linear-gradient(var(--bg),transparent)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:11;background:var(--bg)}
+.word{font-weight:600;font-size:15px;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+.word span{color:var(--ink3);font-weight:400}
+.right{margin-left:auto;display:flex;align-items:center;gap:6px}
+.pill{font-size:12.5px;color:var(--ink2);padding:6px 11px;border-radius:999px;background:var(--fill)}
+.ib{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:var(--ink2)}
+.ib:hover{background:var(--fill)}
+.play{font-size:13px;font-weight:500;padding:6px 13px;border-radius:999px;background:var(--ink);color:var(--bg);display:flex;align-items:center;gap:6px}
+
+.stage{position:absolute;inset:0;overflow:auto;scroll-behavior:smooth;padding:96px 24px 230px}
+/* home */
+.home{min-height:calc(100% - 40px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;transition:opacity .5s,transform .6s}
+.home.gone{opacity:0;transform:translateY(-24px);pointer-events:none}
+.orbwrap{width:280px;height:280px;position:relative}
+.orbwrap canvas{width:100%;height:100%;display:block}
+.hv{position:relative;width:min(860px,100%);height:340px;display:flex;align-items:center;justify-content:center}
+.hv #feed{position:absolute;inset:0;width:100%;height:100%}
+.hv .orbwrap{z-index:1}
+.srcl{position:absolute;transform:translate(-50%,-50%);font-size:12.5px;color:var(--ink2);white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1.25}
+.srcl small{font-size:11px;color:var(--ink3)}
+.srcl.later{opacity:.55}
+.world{width:min(860px,100%);margin-top:64px;text-align:left}
+.wh{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.wh b{font-weight:600;font-size:22px;letter-spacing:-.025em}
+.wh span{font-size:12.5px;color:var(--ink3)}
+.world .map{margin-top:10px}
+.world .cap{grid-template-columns:auto 1fr auto}
+.world .cap p{grid-column:1/3}
+.capbtn{grid-row:1/3;grid-column:3;align-self:center;font-size:13.5px;padding:8px 14px;border-radius:999px;background:var(--fill)}
+.capbtn:hover{background:var(--fill2)}
+.pulse-k{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--ink3);margin-top:10px}
+.pulse-k span{display:flex;align-items:center;gap:7px}
+.pulse-k i{width:8px;height:8px;border-radius:50%;box-shadow:0 0 0 3px var(--fill2)}
+.home h1{font-weight:600;font-size:clamp(36px,5.2vw,56px);letter-spacing:-.035em;line-height:1.05;margin-top:12px}
+.home p{color:var(--ink2);font-size:19px;margin-top:12px;letter-spacing:-.01em}
+.keys{display:flex;gap:22px;margin-top:22px;font-size:12.5px;color:var(--ink3)}
+.keys span{display:flex;align-items:center;gap:7px}
+.keys i{width:6px;height:6px;border-radius:50%}
+/* thread */
+.thread{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+.turn{display:flex;flex-direction:column;gap:22px}
+.ask{align-self:flex-end;max-width:80%;font-size:17px;color:var(--ink2);text-align:right}
+.doc{align-self:flex-end;display:flex;gap:14px;align-items:center;padding:14px 18px;border-radius:18px;background:var(--fill);max-width:420px}
+.doc .pg{width:34px;height:42px;border-radius:6px;background:var(--bg);box-shadow:0 0 0 1px var(--hair);position:relative;flex:none}
+.doc .pg::before,.doc .pg::after{content:"";position:absolute;left:7px;right:7px;height:2px;border-radius:1px;background:var(--fill2);top:12px;box-shadow:0 6px 0 var(--fill2),0 12px 0 var(--fill2)}
+.doc b{font-weight:500;font-size:14.5px;display:block;text-align:left}
+.doc small{color:var(--ink3);font-size:12.5px;display:block;text-align:left}
+.think{display:flex;gap:16px;align-items:flex-start}
+.think .mini{width:56px;height:56px;flex:none;margin-top:-12px}
+.flow{height:128px;margin-top:16px;overflow:hidden;transition:height .6s cubic-bezier(.2,.7,.2,1),opacity .5s}
+.flow canvas{width:100%;height:128px;display:block}
+.flow.shut{height:0;opacity:0}
+.think .mini canvas{width:100%;height:100%}
+.tl{flex:1;min-width:0}
+.now{font-size:17px;letter-spacing:-.012em;min-height:26px;position:relative}
+.now span{display:block;transition:opacity .35s,transform .35s}
+.now span.out{opacity:0;transform:translateY(-6px)}
+.shim{background:linear-gradient(90deg,var(--ink3) 0%,var(--ink) 40%,var(--ink3) 80%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:sh 2.2s linear infinite}
+@keyframes sh{to{background-position:-200% 0}}
+.steps{list-style:none;margin-top:12px;display:flex;flex-direction:column;gap:8px;overflow:hidden;transition:max-height .5s}
+.steps li{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--ink3);transition:color .3s}
+.steps li.ok{color:var(--ink2)}
+.steps li i{width:14px;height:14px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--ink3);flex:none;display:grid;place-items:center;transition:all .3s}
+.steps li.ok i{box-shadow:none;background:var(--ink)}
+.steps li.ok i::after{content:"";width:5px;height:2.5px;border:1.5px solid var(--bg);border-top:0;border-right:0;transform:rotate(-45deg) translate(.5px,-.5px)}
+.steps li.run i{box-shadow:inset 0 0 0 1.5px var(--ink);animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(.7)}}
+.thought{font-size:13.5px;color:var(--ink3);display:flex;align-items:center;gap:6px}
+.thought:hover{color:var(--ink2)}
+.flowline{height:2px;margin-top:14px;border-radius:2px;background:linear-gradient(90deg,var(--geo),var(--gen),var(--asset),var(--liq));opacity:.0;transform-origin:left;transform:scaleX(0);transition:transform 1.2s cubic-bezier(.2,.7,.2,1),opacity .4s}
+.flowline.on{opacity:.9;transform:scaleX(1)}
+/* answer */
+.ans{animation:in .7s cubic-bezier(.2,.7,.2,1) both}
+@keyframes in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.ans h2{font-weight:600;font-size:clamp(28px,3.6vw,38px);letter-spacing:-.03em;line-height:1.12}
+.ans .lede{font-size:18px;color:var(--ink2);margin-top:12px;max-width:58ch;letter-spacing:-.01em}
+.rows{margin-top:28px;display:flex;flex-direction:column}
+.row{display:grid;grid-template-columns:120px 1fr;gap:20px;padding:16px 0;border-top:1px solid var(--hair);align-items:baseline}
+.row:last-child{border-bottom:1px solid var(--hair)}
+.row .c{font-size:13px;color:var(--ink3);display:flex;align-items:center;gap:8px}
+.row .c i{width:7px;height:7px;border-radius:50%;flex:none}
+.row b{font-weight:500;font-size:16px;display:block}
+.row p{font-size:15px;color:var(--ink2);margin-top:2px}
+.viz{margin-top:30px}
+.viz svg{width:100%;height:auto;display:block;overflow:visible}
+.viz small{display:block;font-size:12.5px;color:var(--ink3);margin-top:8px}
+.foot{margin-top:26px;display:flex;flex-wrap:wrap;gap:18px 28px;font-size:13px;color:var(--ink3)}
+.foot span{display:flex;align-items:center;gap:8px}
+.dots{display:inline-flex;gap:3px}
+.dots i{width:5px;height:5px;border-radius:50%;background:var(--fill2)}
+.dots i.f{background:var(--ink2)}
+.ph{display:inline-flex;align-items:center;gap:6px}
+.ph i{width:16px;height:2px;border-radius:2px;background:var(--accent)}
+.next{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px}
+.nx{font-size:14px;padding:9px 15px;border-radius:999px;background:var(--fill);transition:background .2s}
+.nx:hover{background:var(--fill2)}
+.aside{margin-top:22px;font-size:14px;color:var(--ink2);padding-left:16px;border-left:2px solid var(--accent)}
+.aside b{font-weight:500;color:var(--ink)}
+.slide{margin-top:30px;display:flex;align-items:center;gap:16px}
+.slide input{flex:1;-webkit-appearance:none;appearance:none;height:4px;border-radius:2px;background:var(--fill2);outline:none}
+.slide input::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--bg);box-shadow:0 0 0 .5px var(--hair),0 2px 8px rgba(0,0,40,.25);cursor:pointer}
+.slide input::-moz-range-thumb{width:22px;height:22px;border:0;border-radius:50%;background:var(--bg);box-shadow:0 2px 8px rgba(0,0,40,.25);cursor:pointer}
+.slide label{font-size:13px;color:var(--ink3)}
+.slide output{font-size:22px;font-weight:600;letter-spacing:-.02em;min-width:96px;text-align:right;font-variant-numeric:tabular-nums}
+.bars{margin-top:20px;display:flex;flex-direction:column;gap:14px}
+.bar{display:grid;grid-template-columns:170px 1fr 80px;gap:16px;align-items:center;font-size:14.5px}
+.bar .t{height:4px;border-radius:2px;background:var(--fill);position:relative}
+.bar .t i{position:absolute;top:-1px;height:6px;border-radius:3px;transition:all .5s cubic-bezier(.2,.7,.2,1)}
+.bar .t::after{content:"";position:absolute;left:50%;top:-5px;width:1px;height:14px;background:var(--hair)}
+.bar span:last-child{font-size:13px;color:var(--ink3);text-align:right}
+.pack{margin-top:28px;display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--hair);border-radius:20px;overflow:hidden;box-shadow:0 0 0 1px var(--hair)}
+.pack div{background:var(--bg);padding:20px 22px}
+.pack small{font-size:12.5px;color:var(--ink3);display:block;margin-bottom:6px}
+.pack p{font-size:15.5px;line-height:1.45}
+.pack .wide{grid-column:1/-1}
+.plan{margin-top:6px}
+/* composer */
+.dock{position:fixed;left:0;right:0;bottom:0;padding:16px 24px calc(22px + env(safe-area-inset-bottom,0px));background:linear-gradient(transparent,var(--bg) 40%);z-index:9}
+.bar2{max-width:720px;margin:0 auto}
+.input{display:flex;align-items:flex-end;gap:8px;padding:8px 8px 8px 8px;border-radius:28px;background:var(--glass);backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px);box-shadow:0 0 0 1px var(--hair),0 10px 40px rgba(10,10,60,.10)}
+.input textarea{flex:1;border:0;outline:none;resize:none;background:transparent;font:inherit;font-size:16.5px;color:var(--ink);padding:9px 6px;max-height:140px;letter-spacing:-.01em}
+.input textarea::placeholder{color:var(--ink3)}
+.att{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:var(--ink2);flex:none}
+.att:hover{background:var(--fill)}
+.go{width:40px;height:40px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;flex:none;transition:opacity .2s,transform .2s}
+.go:disabled{opacity:.18;cursor:default}
+.chipbrief{display:none;align-items:center;gap:10px;margin:0 6px 8px;padding:8px 12px;border-radius:14px;background:var(--fill);font-size:13.5px}
+.chipbrief.on{display:flex}
+.chipbrief b{font-weight:500}
+.chipbrief button{margin-left:auto;color:var(--ink3);font-size:13px}
+.sugg{max-width:720px;margin:12px auto 0;display:flex;flex-wrap:wrap;justify-content:center;gap:6px 8px;font-size:13.5px;color:var(--ink2);transition:opacity .4s}
+.sugg button{padding:6px 13px;border-radius:999px;background:var(--fill);transition:background .2s,color .2s}.sugg button:hover{color:var(--ink);background:var(--fill2)}.sugg.dim{opacity:.35;pointer-events:none}
+.sugg.hide{opacity:0;pointer-events:none;height:0;margin:0;overflow:hidden}
+/* sheet */
+.veil{position:fixed;inset:0;background:rgba(5,5,26,.32);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:20;display:none;align-items:center;justify-content:center;padding:24px}
+.veil.on{display:flex}
+.sheet{width:min(560px,100%);background:var(--bg);border-radius:24px;box-shadow:0 30px 80px rgba(0,0,40,.35),0 0 0 1px var(--hair);padding:24px;animation:in .35s cubic-bezier(.2,.7,.2,1)}
+.sheet h3{font-weight:600;font-size:20px;letter-spacing:-.02em}
+.sheet p{color:var(--ink2);font-size:14.5px;margin-top:4px}
+.sheet textarea{width:100%;margin-top:16px;min-height:160px;border:0;border-radius:16px;background:var(--fill);padding:14px 16px;font:inherit;font-size:15px;color:var(--ink);resize:vertical;outline:none}
+.sheet .row2{display:flex;align-items:center;gap:10px;margin-top:14px}
+.sheet .row2 .sp{flex:1}
+.btn{font-size:14px;font-weight:500;padding:9px 16px;border-radius:999px;background:var(--fill)}
+.btn.pri{background:var(--ink);color:var(--bg)}
+.btn:hover{filter:brightness(1.05)}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+.seg{position:absolute;left:50%;transform:translateX(-50%);display:flex;padding:3px;border-radius:999px;background:var(--fill)}
+.seg button,.hz button{font-size:13px;padding:5px 15px;border-radius:999px;color:var(--ink2);transition:background .25s,color .25s,box-shadow .25s}
+.seg button[aria-pressed="true"],.hz button[aria-pressed="true"]{background:var(--bg);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,40,.14),0 0 0 .5px var(--hair)}
+.view{position:absolute;inset:0;overflow:auto;padding:96px 24px 120px;display:none;scroll-behavior:smooth}
+.view.on{display:block}
+.page{max-width:720px;margin:0 auto;animation:in .6s cubic-bezier(.2,.7,.2,1) both}
+.page .date{font-size:14px;color:var(--ink3);margin-bottom:6px}
+.page h1{font-weight:600;font-size:clamp(36px,5vw,52px);letter-spacing:-.035em;line-height:1.05}
+.page .lede{font-size:19px;color:var(--ink2);margin-top:10px;letter-spacing:-.01em}
+.page h2{font-weight:600;font-size:26px;letter-spacing:-.025em;margin-top:56px}
+.sig{display:grid;grid-template-columns:120px 1fr 110px;gap:20px;padding:16px 0;border-top:1px solid var(--hair);align-items:center}
+.sig:last-of-type{border-bottom:1px solid var(--hair)}
+.sig b{font-weight:500;display:block}
+.sig p{font-size:14.5px;color:var(--ink2);margin-top:2px}
+.sig svg{width:110px;height:32px;display:block}
+.ppl{display:flex;gap:14px;overflow-x:auto;padding:6px 2px 10px;margin-top:18px;scrollbar-width:none}
+.ppl::-webkit-scrollbar{display:none}
+.pp{display:flex;flex-direction:column;align-items:center;gap:8px;width:92px;flex:none;font-size:13px;color:var(--ink);text-align:center;line-height:1.25}
+.pp .ring{width:62px;height:62px;border-radius:50%;padding:3px;transition:box-shadow .3s,transform .3s}
+.pp .face{width:100%;height:100%;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:600;font-size:16px;letter-spacing:.01em}
+.pp small{display:block;color:var(--ink3);font-size:11.5px;margin-top:2px}
+.pp:hover .ring{transform:scale(1.04)}
+.pp[aria-pressed="true"] .ring{box-shadow:0 0 0 2px var(--ink);transform:scale(1.06)}
+.lens{position:relative;height:230px;margin-top:22px}
+.lens canvas{width:100%;height:100%;display:block}
+.lens .core{position:absolute;left:50%;top:50%;width:88px;height:88px;margin:-44px 0 0 -44px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:600;font-size:21px;background:var(--fill2);box-shadow:0 0 0 7px var(--bg);transition:transform .6s cubic-bezier(.2,.7,.2,1),background .6s}
+.lens .core.empty{color:var(--ink3);font-weight:400;font-size:13px}
+.lens .core.pulse{animation:pl 1.4s cubic-bezier(.2,.7,.2,1)}
+@keyframes pl{30%{transform:scale(1.12)}100%{transform:scale(1)}}
+.lens .lab{position:absolute;top:0;font-size:12.5px;color:var(--ink3)}
+.lens .lab.r{right:0}
+.lstat{text-align:center;font-size:15px;min-height:24px;margin-top:6px;color:var(--ink2)}
+.act{margin-top:26px;animation:in .6s cubic-bezier(.2,.7,.2,1) both}
+.act h3{font-weight:600;font-size:30px;letter-spacing:-.03em;line-height:1.12}
+.act .exp{font-size:13.5px;color:var(--ink3);margin-top:8px;display:flex;gap:14px;flex-wrap:wrap}
+.act .exp span{display:flex;align-items:center;gap:6px}
+.act .exp i{width:7px;height:7px;border-radius:50%}
+.hz{display:inline-flex;padding:3px;border-radius:999px;background:var(--fill);margin-top:26px}
+.fan{margin-top:26px}
+.fan svg{width:100%;height:auto;display:block;overflow:visible}
+.fan path.m,.fan path.c{transition:d .8s cubic-bezier(.2,.7,.2,1)}
+.fan small{display:block;font-size:12.5px;color:var(--ink3);margin-top:8px}
+.lk{font-size:12px;padding:3px 10px;border-radius:999px;background:var(--fill);color:var(--ink2);white-space:nowrap}
+.lk.l1{background:var(--ink);color:var(--bg)}
+.fstat{font-size:14px;color:var(--ink3);margin-top:16px;min-height:22px}
+@media (max-width:640px){.seg{position:static;transform:none;margin-left:10px}.seg button{padding:5px 10px}.word span{display:none}.play span{display:none}.sig{grid-template-columns:1fr;gap:4px}.sig svg{display:none}}
+
+.map{margin-top:24px}
+.map svg{width:100%;height:auto;display:block;overflow:visible}
+.cor{cursor:pointer}
+.cor .hit{stroke:transparent;stroke-width:22;fill:none}
+.cor .ln{fill:none;stroke-linecap:round;transition:opacity .4s,stroke-width .4s}
+.map.pick .cor .ln{opacity:.12}
+.map.pick .cor.on .ln{opacity:1}
+.map .city{font-size:12px;fill:var(--ink2)}
+.map .cap{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin-top:14px;padding-top:14px;border-top:1px solid var(--hair);align-items:baseline}
+.map .cap b{font-weight:500;font-size:16px}
+.map .cap p{grid-column:1/-1;font-size:14.5px;color:var(--ink2)}
+.map .cap span{font-size:12.5px;color:var(--ink3);justify-self:end}
+.talk{margin-top:30px}
+.talk h4{font-weight:600;font-size:20px;letter-spacing:-.02em}
+.talk .q{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.talk .log{display:flex;flex-direction:column;gap:12px;margin-top:16px}
+.bub{max-width:80%;padding:11px 15px;border-radius:20px;font-size:15px;line-height:1.45;animation:in .4s cubic-bezier(.2,.7,.2,1) both}
+.bub.me{align-self:flex-end;background:var(--ink);color:var(--bg);border-bottom-right-radius:6px}
+.bub.them{align-self:flex-start;background:var(--fill2);border-bottom-left-radius:6px;display:flex;gap:10px;align-items:flex-start}
+.bub.them .fa{width:26px;height:26px;border-radius:50%;flex:none;display:grid;place-items:center;color:#fff;font-size:10.5px;font-weight:600}
+.typing{display:inline-flex;gap:4px;padding:4px 0}
+.typing i{width:6px;height:6px;border-radius:50%;background:var(--ink3);animation:bl 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes bl{0%,60%,100%{opacity:.25}30%{opacity:1}}
+.talk small{display:block;font-size:12.5px;color:var(--ink3);margin-top:12px}
+.evt{display:flex;align-items:center;gap:14px;margin-top:24px;padding:16px 18px;border-radius:18px;background:var(--fill)}
+.evt .cal{width:46px;height:50px;border-radius:10px;background:var(--bg);box-shadow:0 0 0 1px var(--hair);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10.5px;color:var(--liq);font-weight:600;flex:none}
+.evt .cal b{font-size:19px;color:var(--ink);font-weight:600;line-height:1}
+.evt p{font-size:14.5px;color:var(--ink2)}
+.evt strong{font-weight:500;color:var(--ink);display:block;font-size:16px}
+.stage-tag{font-size:12px;padding:3px 10px;border-radius:999px;background:var(--fill);color:var(--ink2);white-space:nowrap}
+.cal2{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--hair);border-radius:18px;overflow:hidden;margin-top:26px;box-shadow:0 0 0 1px var(--hair)}
+.cal2 div{background:var(--bg);padding:16px}
+.cal2 small{font-size:12.5px;color:var(--ink3);display:block;margin-bottom:6px}
+.cal2 p{font-size:14.5px;line-height:1.4}
+@media (max-width:640px){.cal2{grid-template-columns:1fr 1fr}}
+
+.lanes{display:grid;gap:10px;margin-top:18px;max-height:300px;overflow:hidden;transition:max-height .6s cubic-bezier(.2,.7,.2,1),opacity .5s;opacity:0}
+.lanes.on{opacity:1}
+.lanes.shut{max-height:0;opacity:0;margin-top:0}
+.lanes .lh{font-size:12.5px;color:var(--ink3)}
+.lane{display:grid;grid-template-columns:120px 1fr 56px;gap:14px;align-items:center;font-size:13.5px;color:var(--ink2)}
+.lane .tr{height:3px;border-radius:2px;background:var(--fill2);overflow:hidden}
+.lane .tr i{display:block;height:100%;width:0;border-radius:2px;background:linear-gradient(90deg,var(--geo),var(--gen),var(--asset),var(--liq))}
+.lane em{font-style:normal;font-size:12px;color:var(--ink3);text-align:right}
+.lane.ok em{color:var(--ink)}
+.deliv{display:flex;gap:18px;align-items:center;margin-top:24px;padding:16px;border-radius:22px;background:var(--fill);transition:background .2s}
+.dthumb{width:78px;height:100px;border-radius:8px;background:#fff;box-shadow:0 1px 2px rgba(0,0,40,.12),0 8px 20px rgba(0,0,40,.12);flex:none;padding:10px 9px;display:flex;flex-direction:column;gap:5px;cursor:pointer;transition:transform .3s cubic-bezier(.2,.7,.2,1)}
+.dthumb:hover{transform:translateY(-2px) rotate(-1deg)}
+.dthumb i{display:block;height:3px;border-radius:2px;background:#E3E4EE}
+.dthumb i.t{height:7px;width:70%;background:#0A0A2E}
+.dthumb i.c{height:22px;background:linear-gradient(90deg,#6A55E8,#14A08F,#E0962A,#E0577F);opacity:.85;margin:3px 0}
+.deliv b{font-weight:600;font-size:17px;letter-spacing:-.015em;display:block}
+.deliv small{display:block;color:var(--ink3);font-size:13px;margin-top:2px}
+.dbtns{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.dbtns button{font-size:13.5px;font-weight:500;padding:7px 14px;border-radius:999px;background:var(--bg);box-shadow:0 0 0 1px var(--hair)}
+.dbtns button.pri{background:var(--ink);color:var(--bg);box-shadow:none}
+.dl{display:none!important}
+body.can-dl .dl{display:inline-flex!important}
+.srcbtn{color:inherit;text-decoration:underline;text-decoration-color:var(--hair);text-underline-offset:3px}
+.srcbtn:hover{color:var(--ink)}
+.wbtn{font-size:13px;padding:6px 12px;border-radius:999px;background:var(--fill);display:inline-flex;align-items:center;gap:6px}
+.wbtn[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.toast{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom,0px));transform:translate(-50%,12px);opacity:0;z-index:40;padding:11px 18px;border-radius:999px;background:var(--ink);color:var(--bg);font-size:14px;box-shadow:0 12px 40px rgba(0,0,40,.25);transition:all .35s cubic-bezier(.2,.7,.2,1);pointer-events:none;max-width:calc(100% - 40px);text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.srclist{display:flex;flex-direction:column;margin-top:14px}
+.srclist div{display:grid;grid-template-columns:1fr auto;gap:2px 14px;padding:12px 0;border-top:1px solid var(--hair)}
+.srclist b{font-weight:500}
+.srclist p{grid-column:1/-1;font-size:14px;color:var(--ink2)}
+.srclist span{font-size:12.5px;color:var(--ink3)}
+.reader{position:fixed;inset:0;z-index:30;background:rgba(5,5,26,.55);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);display:none;flex-direction:column}
+.reader.on{display:flex;animation:fade .3s ease}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.rbar{display:flex;align-items:center;gap:10px;padding:calc(12px + env(safe-area-inset-top,0px)) 20px 12px;color:#fff}
+.rbar b{font-weight:600;font-size:14.5px}
+.rbar span{font-size:12.5px;opacity:.6}
+.rbar .sp{flex:1}
+.rbar button{font-size:13.5px;font-weight:500;padding:7px 14px;border-radius:999px;background:rgba(255,255,255,.14);color:#fff}
+.rbar button.pri{background:#fff;color:#0A0A2E}
+.rscroll{flex:1;overflow:auto;padding:12px 20px calc(40px + env(safe-area-inset-bottom,0px));scroll-behavior:smooth}
+@media (max-width:760px){.srcl{display:none}.hv{height:300px}}
+@media (max-width:640px){.top{padding:0 16px}.pill{display:none}.stage{padding:84px 18px 200px}.row{grid-template-columns:1fr;gap:4px}.bar{grid-template-columns:110px 1fr 64px}.pack{grid-template-columns:1fr}.orbwrap{width:220px;height:220px}.dock{padding:12px 14px calc(16px + env(safe-area-inset-bottom,0px))}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.stage{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="word">OpenFS <span>for HSBC</span></div>
+  <nav class="seg" aria-label="Views"><button data-v="ask" aria-pressed="true">Ask</button><button data-v="today" aria-pressed="false">This week</button><button data-v="ahead" aria-pressed="false">Ahead</button></nav>
+  <div class="right">
+    <span class="pill" title="Scripted answers and illustrative content. Not connected to any data.">Concept · illustrative</span>
+    <button class="play" id="play"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4v16l14-8z"/></svg><span>Play</span></button>
+    <button class="ib" id="reset" aria-label="Start over"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 12a8 8 0 1 0 2.3-5.7"/><path d="M4 4v4h4"/></svg></button>
+    <button class="ib" id="theme" aria-label="Switch light or dark"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg></button>
+  </div>
+</header>
+
+<div class="stage" id="stage">
+  <section class="home" id="home">
+    <div class="hv" id="hv">
+      <canvas id="feed" aria-hidden="true"></canvas>
+      <div class="orbwrap"><canvas id="orb" aria-hidden="true"></canvas></div>
+      <span class="srcl" style="left:9%;top:16%">Their files<small>trackers, decks, personas</small></span>
+      <span class="srcl" style="left:5%;top:50%">Money library<small>research, wealth reports</small></span>
+      <span class="srcl" style="left:9%;top:84%">Market data<small>rates, FX, policy</small></span>
+      <span class="srcl" style="left:91%;top:16%">WPP catalogue<small>spend, audiences</small></span>
+      <span class="srcl" style="left:95%;top:50%">Social listening<small>money culture</small></span>
+      <span class="srcl later" style="left:91%;top:84%">Partner data<small>via InfoSum, later</small></span>
+    </div>
+    <h1>Where is money moving?</h1>
+    <p>Ask anything, or hand it a brief and let it work.</p>
+    <div class="keys" aria-label="The four currents">
+      <span><i style="background:var(--geo)"></i>Geography</span>
+      <span><i style="background:var(--gen)"></i>Generations</span>
+      <span><i style="background:var(--asset)"></i>Asset class</span>
+      <span><i style="background:var(--liq)"></i>Liquidity</span>
+    </div>
+  </section>
+  <div class="thread" id="thread" aria-live="polite"></div>
+</div>
+
+<div class="view" id="today">
+  <div class="page">
+    <p class="date" id="tdate"></p>
+    <h1>What moved this week</h1>
+    <p class="lede">The four currents, read across every source since Monday.</p>
+    <div style="margin-top:28px" id="sigs"></div>
+    <h2>Where money is moving</h2>
+    <p class="lede" style="font-size:16px">Wealth corridors this week. Tap one to read it.</p>
+    <div id="wkmap"></div>
+    <h2>See it through</h2>
+    <p class="lede" style="font-size:16px">Choose a persona. The market flows through them and comes out as something to act on.</p>
+    <div class="ppl" id="ppl1" role="group" aria-label="Personas"></div>
+    <div class="lens" id="lens"><span class="lab">The market</span><span class="lab r">Activated for them</span><canvas aria-hidden="true"></canvas><div class="core empty" id="core">Choose one</div></div>
+    <p class="lstat" id="lstat"></p>
+    <div id="act"></div>
+  </div>
+</div>
+<div class="view" id="ahead">
+  <div class="page">
+    <p class="date">Prediction · last on the roadmap</p>
+    <h1>Look ahead</h1>
+    <p class="lede">How money could move for a persona, over the horizon you choose.</p>
+    <div class="ppl" id="ppl2" role="group" aria-label="Personas"></div>
+    <div class="hz" id="hz" role="group" aria-label="Horizon"><button data-h="m3" aria-pressed="false">3 months</button><button data-h="y1" aria-pressed="true">1 year</button><button data-h="y3" aria-pressed="false">3 years</button><button data-h="y5" aria-pressed="false">5 years</button></div>
+    <p class="fstat" id="fstat"></p>
+    <div class="fan" id="fan"></div>
+    <div id="pred"></div>
+  </div>
+</div>
+
+<div class="dock">
+  <div class="bar2">
+    <div class="input">
+      <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+        <div class="chipbrief" id="chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg><b id="chipt">Brief attached</b><button id="chipx">Remove</button></div>
+        <div style="display:flex;align-items:flex-end;gap:8px">
+          <button class="att" id="attach" aria-label="Attach a brief"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+          <label for="q" class="vh">Ask OpenFS</label>
+          <textarea id="q" rows="1" placeholder="Ask OpenFS"></textarea>
+          <button class="go" id="go" aria-label="Send" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
+        </div>
+      </div>
+    </div>
+    <div class="sugg" id="sugg" aria-label="Suggested next questions"></div>
+  </div>
+</div>
+
+<div class="reader" id="reader" role="dialog" aria-modal="true" aria-label="Response to brief">
+  <div class="rbar"><div><b>Response to brief</b> <span>Concept · illustrative</span></div><span class="sp"></span><button class="dl pri" data-doc="html">Download</button><button class="dl" data-doc="md">Markdown</button><button id="rclose">Close</button></div>
+  <div class="rscroll" id="rscroll"></div>
+</div>
+<div class="veil" id="sveil" role="dialog" aria-modal="true" aria-labelledby="sh2"><div class="sheet"><h3 id="sh2">Where this answer comes from</h3><p>Every answer cites its sources. These are illustrative.</p><div class="srclist" id="srclist"></div><div class="row2"><span class="sp"></span><button class="btn pri" id="sclose">Done</button></div></div></div>
+<div class="toast" id="toast" role="status"></div>
+<div class="veil" id="veil" role="dialog" aria-modal="true" aria-labelledby="sh">
+  <div class="sheet">
+    <h3 id="sh">Hand OpenFS a brief</h3>
+    <p>Paste it or drop a text file. It will plan the work, run it, and return a draft.</p>
+    <label for="bt" class="vh">Brief</label>
+    <textarea id="bt" placeholder="Paste a brief"></textarea>
+    <div class="row2">
+      <button class="btn" id="sample">Use a sample brief</button>
+      <span class="sp"></span>
+      <button class="btn" id="cancel">Cancel</button>
+      <button class="btn pri" id="attachok">Attach</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s), reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const KEYS=['geo','gen','asset','liq'], NAME={geo:'Geography',gen:'Generations',asset:'Asset class',liq:'Liquidity'};
+
+/* ---------- orb: four currents as orbiting particles ---------- */
+class Orb{
+  constructor(cv,opts={}){this.cv=cv;this.ctx=cv.getContext('2d');this.n=opts.n||70;this.mini=!!opts.mini;
+    this.speed=1;this.ts=1;this.r=1;this.tr=1;this.glow=.35;this.tg=.35;this.w={geo:1,gen:1,asset:1,liq:1};this.tw={...this.w};
+    this.orbits=KEYS.map((k,i)=>({k,tilt:i*Math.PI/4+.3,rx:.42-i*.035,ry:.16+i*.035,ph:i*1.7,sp:(.18+i*.05)*(i%2?-1:1)}));
+    this.p=[];this.orbits.forEach((o,oi)=>{for(let j=0;j<this.n;j++)this.p.push({o:oi,a:Math.random()*Math.PI*2,j:(Math.random()-.5)*.05,s:.6+Math.random()*1.1})});
+    this.t=0;this.live=true;this.resize();addEventListener('resize',()=>this.resize());this.col();this.loop=this.loop.bind(this);requestAnimationFrame(this.loop);}
+  col(){this.c={};KEYS.forEach(k=>this.c[k]=css('--'+k));this.ink=css('--ink')}
+  resize(){const d=Math.min(devicePixelRatio||1,2),b=this.cv.getBoundingClientRect();this.cv.width=b.width*d;this.cv.height=b.height*d;this.d=d}
+  set(mode,weights){if(mode==='think'){this.ts=3.2;this.tr=.78;this.tg=.9}else if(mode==='done'){this.ts=.6;this.tr=1;this.tg=.45}else{this.ts=1;this.tr=1;this.tg=.35}
+    if(weights)KEYS.forEach(k=>this.tw[k]=weights[k]!=null?weights[k]:.25);else KEYS.forEach(k=>this.tw[k]=1)}
+  loop(){if(!this.live)return;const L=(a,b,f)=>a+(b-a)*f;this.speed=L(this.speed,this.ts,.04);this.r=L(this.r,this.tr,.04);this.glow=L(this.glow,this.tg,.04);
+    KEYS.forEach(k=>this.w[k]=L(this.w[k],this.tw[k],.05));this.t+=reduce?0:.016*this.speed;this.draw();if(!reduce)requestAnimationFrame(this.loop)}
+  draw(){const {ctx,cv}=this,W=cv.width,H=cv.height,S=Math.min(W,H),cx=W/2,cy=H/2;ctx.clearRect(0,0,W,H);
+    const g=ctx.createRadialGradient(cx,cy,0,cx,cy,S*.42);g.addColorStop(0,this.hex(this.c.geo,.22*this.glow));g.addColorStop(.5,this.hex(this.c.liq,.08*this.glow));g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+    ctx.globalCompositeOperation=document.documentElement.dataset.mode==='dark'?'lighter':'source-over';
+    for(const q of this.p){const o=this.orbits[q.o],w=this.w[o.k];const a=q.a+this.t*o.sp*2+o.ph;
+      const x0=Math.cos(a)*o.rx*(1+q.j)*S*this.r,y0=Math.sin(a)*o.ry*(1+q.j)*S*this.r,ct=Math.cos(o.tilt+this.t*.05),st=Math.sin(o.tilt+this.t*.05);
+      const x=cx+x0*ct-y0*st,y=cy+x0*st+y0*ct,z=(Math.sin(a)+1)/2;const rad=(this.mini?.9:1.25)*q.s*this.d*(.6+z*.8)*(.5+w*.7);
+      ctx.beginPath();ctx.arc(x,y,rad,0,Math.PI*2);ctx.fillStyle=this.hex(this.c[o.k],(.18+z*.62)*(.25+w*.75));ctx.fill()}
+    ctx.globalCompositeOperation='source-over';
+    ctx.beginPath();ctx.arc(cx,cy,S*.035*(this.mini?1.6:1)*(1+.08*Math.sin(this.t*3)),0,Math.PI*2);ctx.fillStyle=this.hex(this.ink,.9);ctx.fill()}
+  hex(h,a){h=h.replace('#','');if(h.length===3)h=h.split('').map(x=>x+x).join('');const n=parseInt(h,16);return `rgba(${n>>16&255},${n>>8&255},${n&255},${Math.max(0,Math.min(1,a))})`}
+  stop(){this.live=false;this.draw()}
+}
+function modeName(){const r=document.documentElement;return r.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}
+document.documentElement.dataset.mode=modeName();
+const homeOrb=new Orb($('#orb'),{n:90});
+/* ---------- feed: raw information flowing into the orb ---------- */
+class Feed{
+  constructor(cv){this.cv=cv;this.ctx=cv.getContext('2d');this.live=true;
+    this.src=[{x:.09,y:.16,t:'doc',w:1},{x:.05,y:.5,t:'doc',w:1},{x:.09,y:.84,t:'tick',w:.9},{x:.91,y:.16,t:'dot',w:.9},{x:.95,y:.5,t:'bub',w:.7},{x:.91,y:.84,t:'dot',w:.3,later:1}];
+    this.f=[];for(let i=0;i<44;i++)this.f.push(this.spawn(Math.random()));
+    this.resize();addEventListener('resize',()=>this.resize());this.col();this.loop=this.loop.bind(this);requestAnimationFrame(this.loop)}
+  col(){this.ink=css('--ink2')}
+  resize(){const d=Math.min(devicePixelRatio||1,2),b=this.cv.getBoundingClientRect();this.cv.width=Math.max(1,b.width*d);this.cv.height=Math.max(1,b.height*d);this.d=d}
+  spawn(u0){let r=Math.random()*this.src.reduce((a,s)=>a+s.w,0),i=0;for(;i<this.src.length-1;i++){r-=this.src[i].w;if(r<=0)break}
+    return {s:i,u:u0||0,v:.0018+Math.random()*.0022,cp:(Math.random()-.5)*1.4,jx:(Math.random()-.5)*26,jy:(Math.random()-.5)*20,rot:(Math.random()-.5)*.6}}
+  anchor(s){const W=this.cv.width,H=this.cv.height,d=this.d,left=s.x<.5;return [s.x*W+(left?78:-78)*d,s.y*H]}
+  loop(){if(!this.live)return;this.draw();if(!reduce)requestAnimationFrame(this.loop)}
+  draw(){const {ctx}=this,W=this.cv.width,H=this.cv.height,d=this.d,cx=W/2,cy=H/2,h=homeOrb.hex.bind(homeOrb);ctx.clearRect(0,0,W,H);
+    const sp=(homeOrb.speed||1);
+    this.src.forEach(s=>{const [ax,ay]=this.anchor(s);const mx=(ax+cx)/2,my=(ay+cy)/2;ctx.beginPath();ctx.moveTo(ax,ay);ctx.quadraticCurveTo(mx,my+(ay<cy?-1:1)*0,cx,cy);
+      ctx.strokeStyle=h(this.ink,s.later?.04:.08);ctx.lineWidth=1*d;ctx.setLineDash(s.later?[3*d,5*d]:[]);ctx.stroke();ctx.setLineDash([])});
+    for(const q of this.f){const s=this.src[q.s];if(!reduce)q.u+=q.v*sp;if(q.u>=.9){Object.assign(q,this.spawn(0));continue}
+      const [a0,b0]=this.anchor(s),ax=a0+q.jx*d,ay=b0+q.jy*d,dx=cx-ax,dy=cy-ay,L=Math.hypot(dx,dy);
+      const kx=(ax+cx)/2-dy/L*L*.18*q.cp,ky=(ay+cy)/2+dx/L*L*.18*q.cp,u=q.u,iu=1-u;
+      const x=iu*iu*ax+2*iu*u*kx+u*u*cx,y=iu*iu*ay+2*iu*u*ky+u*u*cy;
+      const sc=(1-.7*u)*d,al=Math.min(1,u/.12)*(1-Math.pow(u/.9,3))*(s.later?.3:.7);if(al<=.01)continue;
+      ctx.save();ctx.translate(x,y);ctx.rotate(q.rot*(1-u));ctx.globalAlpha=al;
+      if(s.t==='doc'){ctx.fillStyle=h(this.ink,.16);ctx.strokeStyle=h(this.ink,.55);ctx.lineWidth=.8*d;const w=13*sc,hh=16*sc;
+        ctx.beginPath();ctx.roundRect?ctx.roundRect(-w/2,-hh/2,w,hh,2*sc):ctx.rect(-w/2,-hh/2,w,hh);ctx.fill();ctx.stroke();
+        ctx.beginPath();for(let k=0;k<3;k++){ctx.moveTo(-w/2+2.5*sc,-hh/2+4*sc+k*3.6*sc);ctx.lineTo(w/2-2.5*sc-(k===2?3*sc:0),-hh/2+4*sc+k*3.6*sc)}ctx.stroke()}
+      else if(s.t==='tick'){ctx.strokeStyle=h(this.ink,.7);ctx.lineWidth=1.3*d;ctx.beginPath();ctx.moveTo(-8*sc,4*sc);ctx.lineTo(-3*sc,-1*sc);ctx.lineTo(1*sc,2*sc);ctx.lineTo(8*sc,-5*sc);ctx.stroke()}
+      else if(s.t==='bub'){ctx.strokeStyle=h(this.ink,.6);ctx.lineWidth=1*d;ctx.beginPath();ctx.ellipse(0,0,7*sc,5*sc,0,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(-3*sc,4*sc);ctx.lineTo(-5*sc,8*sc);ctx.lineTo(0,4.6*sc);ctx.stroke()}
+      else{ctx.fillStyle=h(this.ink,.7);for(let k=0;k<3;k++){ctx.beginPath();ctx.arc((k-1)*4.5*sc,(k%2?-1.5:1.5)*sc,1.6*sc,0,Math.PI*2);ctx.fill()}}
+      ctx.restore()}
+  }
+}
+const feed=new Feed($('#feed'));
+
+
+
+/* ---------- flow: currents converging into the answer ---------- */
+class Flow{
+  constructor(cv,w){this.cv=cv;this.ctx=cv.getContext('2d');this.w={geo:.25,gen:.25,asset:.25,liq:.25,...(w||{})};this.live=true;this.t=0;this.k=0;this.tk=0;
+    this.p=[];KEYS.forEach((key,i)=>{for(let j=0;j<46;j++)this.p.push({i,key,x:Math.random(),v:.12+Math.random()*.2,s:.6+Math.random()})});
+    this.resize();this.col();this.loop=this.loop.bind(this);requestAnimationFrame(this.loop)}
+  col(){this.c={};KEYS.forEach(k=>this.c[k]=css('--'+k));this.ink=css('--ink')}
+  resize(){const d=Math.min(devicePixelRatio||1,2),b=this.cv.getBoundingClientRect();this.cv.width=Math.max(1,b.width*d);this.cv.height=Math.max(1,b.height*d);this.d=d}
+  converge(){this.tk=1}
+  loop(){if(!this.live)return;this.k+=(this.tk-this.k)*.05;this.t+=reduce?0:.016;this.draw();if(!reduce)requestAnimationFrame(this.loop)}
+  draw(){const {ctx}=this,W=this.cv.width,H=this.cv.height,cy=H/2,ex=W-12*this.d;ctx.clearRect(0,0,W,H);
+    KEYS.forEach((key,i)=>{const off=(i-1.5)*H*.27*(1-this.k*.6),w=this.w[key];ctx.beginPath();
+      for(let s=0;s<=60;s++){const x=s/60,y=cy+off*Math.pow(1-x,1.4)+Math.sin(x*7+this.t*1.6+i)*H*.08*(1-x);s?ctx.lineTo(x*ex,y):ctx.moveTo(x*ex,y)}
+      const g=ctx.createLinearGradient(0,0,ex,0);g.addColorStop(0,homeOrb.hex(this.c[key],0));g.addColorStop(1,homeOrb.hex(this.c[key],.15+.45*w));
+      ctx.strokeStyle=g;ctx.lineWidth=(1+w)*this.d;ctx.stroke()});
+    for(const q of this.p){if(!reduce)q.x+=q.v*.012*(1+this.k*1.5);if(q.x>1)q.x-=1;
+      const off=(q.i-1.5)*H*.27*(1-this.k*.6),pull=Math.pow(1-q.x,1.4);
+      const y=cy+off*pull+Math.sin(q.x*7+this.t*1.6+q.i)*H*.08*(1-q.x);const x=q.x*ex;
+      const w=this.w[q.key],a=(.25+.75*q.x)*(.35+.65*w);ctx.beginPath();ctx.arc(x,y,q.s*this.d*(1.2+w*1.1),0,Math.PI*2);ctx.fillStyle=homeOrb.hex(this.c[q.key],a);ctx.fill()}
+    const r=(3.5+this.k*3+Math.sin(this.t*4))*this.d,g=ctx.createRadialGradient(ex,cy,0,ex,cy,r*5);g.addColorStop(0,homeOrb.hex(this.ink,.35));g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=g;ctx.fillRect(ex-r*5,cy-r*5,r*10,r*10);ctx.beginPath();ctx.arc(ex,cy,r,0,Math.PI*2);ctx.fillStyle=homeOrb.hex(this.ink,.95);ctx.fill()}
+  stop(){this.live=false}
+}
+
+/* ---------- content ---------- */
+const BRIEF_SAMPLE='Brief: Launch a premium savings and investing proposition for UK emerging affluent customers.\nObjective: become the bank they move their first serious money to.\nTiming: ahead of the end of the tax year.\nDeliverables: audience, insight, territories, proof.';
+function dots(n){let s='<span class="dots" aria-hidden="true">';for(let i=0;i<5;i++)s+=`<i class="${i<n?'f':''}"></i>`;return s+'</span>'}
+function foot(c,why,src,phase){return `<div class="foot"><span>${dots(c)}${['','Low','Low to medium','Medium','Medium to high','High'][c]} confidence · ${why}</span><button class="srcbtn" data-srcs="${src}">${src}</button><span class="ph"><i></i>${phase}</span></div>`}
+function line(vals,col,label){const w=720,h=150,mx=Math.max(...vals),mn=Math.min(...vals);
+  const P=vals.map((v,i)=>[i*w/(vals.length-1),h-10-(v-mn)/(mx-mn||1)*(h-30)]);let d=`M${P[0][0]} ${P[0][1]}`;
+  for(let i=1;i<P.length;i++){const [x0,y0]=P[i-1],[x1,y1]=P[i],mxp=(x0+x1)/2;d+=` C${mxp} ${y0},${mxp} ${y1},${x1} ${y1}`}
+  const id='g'+Math.random().toString(36).slice(2,7),L=P[P.length-1];
+  return `<div class="viz"><svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${label}"><defs><linearGradient id="${id}" x1="0" x2="1"><stop offset="0" stop-color="${col}" stop-opacity=".15"/><stop offset="1" stop-color="${col}"/></linearGradient></defs>
+  <path d="${d}" fill="none" stroke="url(#${id})" stroke-width="2.5" stroke-linecap="round" pathLength="1" style="stroke-dasharray:1;stroke-dashoffset:1;animation:dr 1.6s .2s cubic-bezier(.2,.7,.2,1) forwards"/>
+  <circle cx="${L[0]}" cy="${L[1]}" r="5" fill="${col}" style="opacity:0;animation:fi .4s 1.6s forwards"/></svg><small>${label} · illustrative shape, not real data</small></div>`}
+const st=document.createElement('style');st.textContent='@keyframes dr{to{stroke-dashoffset:0}}@keyframes fi{to{opacity:1}}';document.head.appendChild(st);
+function rows(a){return '<div class="rows">'+a.map(([k,t,p])=>`<div class="row"><span class="c"><i style="background:var(--${k})"></i>${NAME[k]}</span><div><b>${t}</b><p>${p}</p></div></div>`).join('')+'</div>'}
+
+const S={
+ uk:{q:'What’s moving for UK emerging affluent customers right now?',w:{liq:1,asset:.85,gen:.5,geo:.2},
+  steps:['Reading the team’s tracker and persona files','Checking the money library','Looking at rates and the tax calendar','Seeing it through the emerging affluent persona'],
+  say:['Reading the four currents','Checking what’s changed','Weighing signal against noise','Seeing it through the persona'],
+  html:()=>`<h2>Cash is being freed up, and it’s looking for somewhere to go.</h2>
+  <p class="lede">Three money moments will shape this persona over the next quarter.</p>
+  ${rows([['liq','Deals ending','Fixed-rate mortgages rolling off force a choice: pay down, remortgage or release equity.'],['asset','Saving to investing','Interest in moving cash into ISAs and funds builds as the tax year closes.'],['gen','First family money','Early talk of gifts and inheritance from parents starts to surface.']])}
+  ${line([22,24,23,27,30,29,34,38,41,40,46,52],'var(--asset)','Interest in investing over saving, past year')}
+  <p class="aside"><b>For HSBC:</b> meet people before the decision, not after it. Lead with making freed-up cash work.</p>
+  ${foot(3,'sources agree on direction, not size','Their files · money library · market data','Available in the quick win')}`,
+  next:[['Ask them directly','askp:ea'],['What does the next rate decision mean?','event'],['Look ahead','ahead:ea'],['Turn this into a brief','brief']]},
+ hk:{q:'Where is mainland money flowing into Hong Kong, and who should we talk to?',w:{geo:1,asset:.55,gen:.45,liq:.3},
+  steps:['Reading cross-border wealth research','Checking FX and the policy calendar','Seeing it through the draft mainland mover persona'],
+  say:['Following money across the border','Reading the timing','Separating people from accounts'],
+  html:()=>`<h2>The money follows life plans, not just accounts.</h2>
+  <p class="lede">Work, study, property and protecting the family pull savings south.</p>
+  ${corridors('h'+Math.random().toString(36).slice(2,6),0)}
+  ${rows([['geo','Young professionals','Relocating for work, opening their first account in the city.'],['gen','Families planning ahead','Saving for education and a future move.'],['asset','Protection seekers','Looking for insurance and savings products they can’t get at home.']])}
+  <p class="aside"><b>Read as direction.</b> The persona is a draft and local partner data is still being stood up.</p>
+  ${foot(2,'strong on the flow, thinner on the people','Money library · market data','Next on the roadmap')}`,
+  next:[['Which corridors matter most?','corr'],['Ask a mainland mover','askp:mm'],['Look ahead for them','ahead:mm']]},
+ rates:{q:'What if UK interest rates fall further this year?',w:{liq:1,asset:.9,geo:.35,gen:.25},
+  steps:['Loading current market conditions','Comparing with past rate cycles','Running it through the persona'],
+  say:['Setting up a lower-rate world','Comparing with past cycles','Seeing it through the persona'],
+  html:()=>`<h2>Lower rates send cash looking for a better home.</h2>
+  <p class="lede">Drag to change the size of the cut.</p>
+  <div class="slide"><label for="rate">Cut</label><input type="range" id="rate" min="0" max="100" step="25" value="50" aria-label="Size of rate cut in basis points"><output id="ro">0.50 pts</output></div>
+  <div class="bars" id="bars"></div>
+  <p class="aside"><b>This is where it’s heading.</b> Real scenarios need forecast models trained on the history built in earlier steps.</p>
+  ${foot(1,'illustrative until the models exist','Market data · money library · models (later)','Last on the roadmap')}`,
+  after:()=>{const r=$('#rate'),o=$('#ro'),b=$('#bars');if(!r)return;const R=[['Cash savings',-1,'liq'],['Funds and ISAs',1,'asset'],['Remortgaging',.9,'liq'],['Moving home',.5,'gen']];
+   const draw=()=>{const m=r.value/100;o.textContent=m.toFixed(2)+' pts';b.innerHTML=R.map(([n,d,k])=>{const v=m*d*48;const s=v>=0?`left:50%;width:${v}%`:`left:${50+v}%;width:${-v}%`;
+    return `<div class="bar"><span>${n}</span><span class="t"><i style="${s};background:var(--${k})"></i></span><span>${v===0?'Flat':v>0?(v>24?'Up sharply':'Up'):(v<-24?'Down sharply':'Down')}</span></div>`}).join('')};r.addEventListener('input',draw);draw()},
+  next:[['What does the next decision mean?','event'],['Look ahead over five years','ahead:ea'],['Turn this into a brief','brief']]},
+ corr:{q:'Which wealth corridors should HSBC prioritise right now?',w:{geo:1,gen:.5,asset:.45,liq:.25},
+  steps:['Reading cross-border flow research','Checking FX and policy on each route','Weighing size against how fast it’s growing','Matching corridors to personas'],
+  say:['Tracing money between markets','Checking each route','Ranking the corridors','Matching them to people'],
+  html:()=>`<h2>Two corridors lead, one is worth watching.</h2>
+  <p class="lede">Money moving into Hong Kong from the mainland and the Middle East is the strongest pull this quarter.</p>
+  ${corridors('a'+Math.random().toString(36).slice(2,6))}
+  ${foot(2,'routes are clear; sizes aren’t yet','Money library · market data','Next on the roadmap')}`,
+  next:[['What does it mean for mainland movers?','hk'],['Ask a persona','askp:mm'],['Look ahead for them','ahead:mm']]},
+ event:{q:'What does the next Bank of England decision mean for our personas?',w:{liq:1,asset:.7,geo:.3,gen:.2},
+  steps:['Checking the policy calendar','Reading market expectations','Running the decision through each persona','Flagging only where it matters'],
+  say:['Reading the calendar','Weighing what’s priced in','Running it through each persona','Deciding what to flag'],
+  html:()=>`<h2>It matters most for people mid-decision.</h2>
+  <div class="evt"><span class="cal">NEXT<b>MPC</b></span><span><strong>Bank of England rate decision</strong><p>Date and expectations from the policy calendar. Illustrative.</p></span></div>
+  <div class="rows">
+   <div class="row"><span class="c"><i style="background:var(--liq)"></i>Emerging affluent</span><div><b>Remortgage maths changes</b><p>Worth reaching them before their deal ends.</p></div></div>
+   <div class="row"><span class="c"><i style="background:var(--gen)"></i>Growing family</span><div><b>Monthly budget eases slightly</b><p>Room to start saving again.</p></div></div>
+   <div class="row"><span class="c"><i style="background:var(--asset)"></i>Business owner</span><div><b>Cheaper to borrow ahead of a sale</b><p>Can bring timing forward.</p></div></div>
+   <div class="row"><span class="c"><i style="background:var(--geo)"></i>Mainland mover</span><div><b>Little direct effect</b><p>Hong Kong rates follow the US, not the UK.</p></div></div>
+  </div>
+  <p class="aside"><b>Flagged only where it hits a persona.</b> No alert for everyone, every time.</p>
+  <div style="margin-top:16px"><button class="wbtn" data-notify aria-pressed="false"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>Flag it before the decision</button></div>
+  ${foot(3,'clear mechanics, uncertain outcome','Market data · persona','Next on the roadmap')}`,
+  next:[['What if rates fall?','rates'],['What should we talk about this month?','content'],['Ask a persona','askp:ea']]},
+ trends:{q:'What early signals should we watch on money culture?',w:{gen:.9,asset:.8,geo:.5,liq:.5},
+  steps:['Scanning social conversation','Checking the money library for the same shift','Separating fads from early trends','Placing each on a curve'],
+  say:['Listening to the conversation','Checking it holds up','Separating fads from trends','Placing them'],
+  html:()=>`<h2>Five shifts, at different stages.</h2>
+  <div class="rows">
+   <div class="row"><span class="c"><i style="background:var(--geo)"></i>Early</span><div><b>Families splitting life across two cities</b><p>Money follows children and parents in different places.</p></div></div>
+   <div class="row"><span class="c"><i style="background:var(--liq)"></i>Early</span><div><b>Paying down mortgages instead of saving</b><p>Overpaying feels safer than investing for some.</p></div></div>
+   <div class="row"><span class="c"><i style="background:var(--gen)"></i>Emerging</span><div><b>Grandparents giving while they’re alive</b><p>Gifts arrive earlier and more often.</p></div></div>
+   <div class="row"><span class="c"><i style="background:var(--asset)"></i>Emerging</span><div><b>Younger savers investing through apps first</b><p>The bank comes second, if at all.</p></div></div>
+   <div class="row"><span class="c"><i style="background:var(--asset)"></i>Mainstream</span><div><b>Gold and alternatives as a safe harbour</b><p>Already widely discussed; less of an edge.</p></div></div>
+  </div>
+  <p class="aside"><b>Needs social listening,</b> which comes in as the original agents are built out.</p>
+  ${foot(2,'early signals are noisy by nature','Social listening (next) · money library','Next on the roadmap')}`,
+  next:[['What should we talk about this month?','content'],['How are competitors positioned?','comp'],['Look ahead','ahead:fam']]},
+ content:{q:'What should we be talking about this month?',w:{liq:.8,gen:.7,asset:.7,geo:.3},
+  steps:['Reading this week’s money moments','Checking the calendar','Matching themes to personas','Choosing a format for each'],
+  say:['Reading the moments','Checking the calendar','Matching themes to people','Choosing formats'],
+  html:()=>`<h2>Four themes, each tied to a moment.</h2>
+  <div class="cal2">
+   <div><small>Thought leadership</small><p>What the end of cheap fixed rates means for your savings</p></div>
+   <div><small>Client comms</small><p>A short checklist before the tax year closes</p></div>
+   <div><small>Events</small><p>Family money evenings for parents and grown-up children</p></div>
+   <div><small>Social</small><p>One question to ask your parents about money</p></div>
+  </div>
+  <p class="aside"><b>Timed to moments,</b> not the content calendar: each theme lands when the money moves.</p>
+  ${foot(3,'themes are sourced; the tone is yours','Money library · market data · persona','Next on the roadmap')}`,
+  next:[['Turn this into a brief','brief'],['What early signals should we watch?','trends'],['Ask a persona','askp:fam']]},
+ comp:{q:'Where is competitor positioning drifting from what customers need?',w:{gen:.9,asset:.5,liq:.4,geo:.3},
+  steps:['Scanning competitor messaging','Reading what customers are looking for','Finding the gap'],
+  say:['Reading the market’s messaging','Listening to customers','Finding the gap'],
+  html:()=>`<h2>Rivals sell products. Customers want help with moments.</h2>
+  <div class="viz"><svg viewBox="0 0 720 280" role="img" aria-label="Positioning map, illustrative">
+   <line x1="360" y1="10" x2="360" y2="270" stroke="var(--hair)"/><line x1="10" y1="140" x2="710" y2="140" stroke="var(--hair)"/>
+   <rect x="380" y="22" width="310" height="104" rx="16" fill="var(--gen)" opacity=".12"/><text x="535" y="80" text-anchor="middle" font-size="13" font-weight="600" fill="var(--gen)">Where customers are</text>
+   <g font-size="12" fill="var(--ink3)"><text x="704" y="132" text-anchor="end">Life moments</text><text x="16" y="132">Products and rates</text><text x="368" y="24">Premium</text><text x="368" y="264">Everyday</text></g>
+   <g font-size="12" fill="var(--ink2)"><circle cx="120" cy="70" r="7" fill="var(--ink3)"/><text x="132" y="74">Competitor A</text><circle cx="210" cy="190" r="7" fill="var(--ink3)"/><text x="222" y="194">Competitor B</text><circle cx="90" cy="220" r="7" fill="var(--ink3)"/><text x="102" y="224">Competitor C</text><circle cx="420" cy="200" r="7" fill="var(--ink3)"/><text x="432" y="204">Competitor D</text></g></svg>
+   <small>Positions are illustrative, not an analysis of real brands</small></div>
+  ${foot(3,'messaging is public; response is the next test','Money library · WPP data','Next on the roadmap')}`,
+  next:[['Turn this into a brief','brief'],['What should we talk about this month?','content']]},
+ brief:{brief:true,w:{liq:.9,asset:1,gen:.6,geo:.25},
+  steps:['Reading the brief','Planning: audience, insight, territories, proof','Pulling money moments for emerging affluent','Checking claims against sources','Scanning competitor messaging','Projecting the next year for this audience','Drafting and cross-checking'],
+  say:['Reading your brief','Making a plan','Working through it','Checking every claim','Looking at the competition','Looking ahead','Drafting'],
+  html:()=>`<h2>Your draft is ready.</h2>
+  <p class="lede">Built from the brief, the persona and the four currents. Every line traces back to a source.</p>
+  <div class="deliv"><div class="dthumb" data-doc="open" role="button" tabindex="0" aria-label="Open the response"><i class="t"></i><i></i><i></i><i class="c"></i><i></i><i style="width:60%"></i><i></i></div><div><b>Response to brief</b><small>Premium savings and investing · UK emerging affluent · 9 pages</small><div class="dbtns"><button class="pri" data-doc="open">Open</button><button class="dl" data-doc="html">Download</button><button class="dl" data-doc="md">Markdown</button></div></div></div>
+  <div class="pack">
+   <div><small>Audience</small><p>Emerging affluent in the UK with a deal ending or a first windfall</p></div>
+   <div><small>Tension</small><p>“I finally have money to move, and no idea who to trust with it.”</p></div>
+   <div class="wide"><small>Insight</small><p>The decision happens in a short window, and most people make it with whoever reaches them first.</p></div>
+   <div><small>Territories</small><p>Your next move · Money that grows up with you · Before the deal ends</p></div>
+   <div><small>Moments</small><p>End of tax year · Fixed-rate expiry · First family gift</p></div>
+   <div class="wide"><small>Looking ahead</small><p>Over the next year more of this audience faces a rate decision. Launch before the tax year closes, not after.</p></div>
+   <div class="wide"><small>Competitive space</small><p>Rivals talk about products. Few talk about the moment money moves within a family.</p></div>
+  </div>
+  <p class="aside"><b>Not yet sized.</b> How many people sit in this audience needs partner data through InfoSum, a later step.</p>
+  ${foot(3,'insight is sourced; the creative call is yours','Brief · their files · money library · market data','Next on the roadmap')}`,
+  next:[['Open the full response','doc:open'],['What should we talk about this month?','content'],['Ask the persona','askp:ea'],['Copy the summary','copy']]}
+};
+S.none={q:'',w:null,steps:['Looking for the closest question I can answer'],say:['Thinking'],
+  html:()=>`<h2>That one’s outside this concept.</h2><p class="lede">This demo answers a few scripted questions. Try one of these.</p>`,next:[['UK emerging affluent','uk'],['Hong Kong','hk'],['Rates','rates'],['Hand it a brief','brief']]};
+
+/* ---------- flow ---------- */
+const stage=$('#stage'),thread=$('#thread'),ta=$('#q'),go=$('#go'),chip=$('#chip');
+let busy=false,brief=null,playing=false,minis=[];
+const wait=ms=>new Promise(r=>setTimeout(r,reduce?0:ms));
+function fit(){ta.style.height='auto';ta.style.height=Math.min(ta.scrollHeight,140)+'px';go.disabled=busy||(!ta.value.trim()&&!brief)}
+ta.addEventListener('input',fit);ta.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submit()}});go.addEventListener('click',submit);
+function match(t){t=t.toLowerCase();if(/corridor|geograph|where.*money|routes?/.test(t))return'corr';if(/decision|bank of england|boe|event|mpc/.test(t))return'event';if(/trend|signal|culture|early/.test(t))return'trends';if(/content|talk about|theme|social post/.test(t))return'content';if(/compet|rival/.test(t))return'comp';if(/hong kong|mainland|china|\bhk\b/.test(t))return'hk';if(/rate|what if|scenario|cut/.test(t))return'rates';if(/affluent|uk|moving|persona|money/.test(t))return'uk';return'none'}
+function submit(){if(busy)return;const t=ta.value.trim();if(brief)return run('brief',t||'Here’s a brief. Can you take it from here?');if(t)run(match(t),t)}
+async function typeIn(t){ta.value='';for(const ch of t){ta.value+=ch;fit();await wait(18+Math.random()*30)}await wait(300)}
+async function ask(k){if(busy)return;if(k==='doc:open'){openDoc();return}if(k.startsWith('askp:')){show('today');await activate(k.slice(5));$('#talk')&&$('#talk').scrollIntoView({block:'center',behavior:reduce?'auto':'smooth'});return}if(k.startsWith('today:')){show('today');activate(k.slice(6));return}if(k.startsWith('ahead:')){show('ahead');pickAhead(k.slice(6));return}if(k==='brief'){openSheet();return}if(k==='copy'){copy();return}busy=true;await typeIn(S[k].q);busy=false;run(k,S[k].q)}
+function setBrief(text){brief=text;$('#chipt').textContent=(text.split('\n')[0]||'Brief').replace(/^Brief:\s*/,'').slice(0,60)||'Brief attached';chip.classList.add('on');fit()}
+$('#chipx').addEventListener('click',()=>{brief=null;chip.classList.remove('on');fit()});
+
+async function run(k,text){
+  busy=true;fit();const d=S[k];
+  $('#home').classList.add('gone');$('#sugg').classList.add('dim');homeOrb.set('think',d.w);
+  if($('#home').style.display!=='none'){await wait(450);$('#home').style.display='none';homeOrb.live=false;feed.live=false}
+  minis.forEach(m=>m.stop());
+  const turn=document.createElement('section');turn.className='turn';
+  let head='';
+  if(d.brief){const b=brief||BRIEF_SAMPLE;const title=(b.split('\n')[0]||'Brief').replace(/^Brief:\s*/,'');head=`<div class="doc"><span class="pg"></span><span><b>${esc(title.length>64?title.slice(0,title.lastIndexOf(' ',62))+'…':title)}</b><small>Brief · ${b.split(/\s+/).length} words</small></span></div>`;if(text)head+=`<p class="ask">${esc(text)}</p>`}
+  else head=`<p class="ask">${esc(text)}</p>`;
+  turn.innerHTML=head+`<div class="think"><div class="mini"><canvas aria-hidden="true"></canvas></div><div class="tl"><div class="now"><span class="shim">${d.say[0]}</span></div><ol class="steps">${d.steps.map(s=>`<li><i></i>${s}</li>`).join('')}</ol>${d.brief?`<div class="lanes"><p class="lh">Five agents working in parallel</p>${LANES.map(l=>`<div class="lane"><span>${l}</span><span class="tr"><i></i></span><em>Waiting</em></div>`).join('')}</div>`:''}<div class="flow"><canvas aria-hidden="true"></canvas></div><div class="flowline"></div></div></div>`;
+  thread.appendChild(turn);ta.value='';brief=null;chip.classList.remove('on');fit();
+  const mo=new Orb(turn.querySelector('.mini canvas'),{n:34,mini:true});mo.set('think',d.w);minis.push(mo);const fl=new Flow(turn.querySelector('.flow canvas'),d.w);minis.push(fl);
+  turn.scrollIntoView({block:'start',behavior:reduce?'auto':'smooth'});
+  const lis=turn.querySelectorAll('.steps li'),now=turn.querySelector('.now');let si=0;const t0=Date.now();
+  for(let i=0;i<lis.length;i++){lis[i].classList.add('run');
+    const say=d.say[Math.min(i,d.say.length-1)];if(say!==now.textContent){const sp=now.querySelector('span');sp.classList.add('out');await wait(260);now.innerHTML=`<span class="shim">${say}</span>`}
+    if(d.brief&&i===2)runLanes(turn);
+    await wait(d.brief?950:760);lis[i].classList.remove('run');lis[i].classList.add('ok')}
+  const ln=turn.querySelector('.lanes');if(ln){await wait(400);ln.style.maxHeight=ln.scrollHeight+'px';requestAnimationFrame(()=>ln.classList.add('shut'))}
+  fl.converge();turn.querySelector('.flowline').classList.add('on');await wait(900);turn.querySelector('.flow').classList.add('shut');setTimeout(()=>fl.stop(),700);
+  const secs=Math.max(1,Math.round((Date.now()-t0)/1000));
+  const tl=turn.querySelector('.tl'),stepsEl=tl.querySelector('.steps');stepsEl.style.maxHeight=stepsEl.scrollHeight+'px';requestAnimationFrame(()=>{stepsEl.style.maxHeight='0px'});
+  now.innerHTML=`<button class="thought" aria-expanded="false">${d.brief?'Worked':'Thought'} for ${secs}s · ${d.steps.length} steps <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></button>`;
+  now.querySelector('button').addEventListener('click',e=>{const open=stepsEl.style.maxHeight!=='0px';stepsEl.style.maxHeight=open?'0px':stepsEl.scrollHeight+'px';e.currentTarget.setAttribute('aria-expanded',!open)});
+  mo.set('done',d.w);
+  const ans=document.createElement('div');ans.className='ans';ans.innerHTML=d.html()+`<div class="next">${d.next.map(([l,x])=>`<button class="nx" data-k="${x}">${l}</button>`).join('')}</div>`;
+  turn.appendChild(ans);if(d.after)d.after();setSugg(d.next);$('#sugg').classList.remove('dim');
+  busy=false;fit();}
+function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-k]');if(!b||busy)return;const k=b.dataset.k;if(k.startsWith('pbrief:')){const p=PM[k.slice(7)];show('ask');setBrief('Brief: A proposition for '+p.n.toLowerCase()+' ('+p.m.replace(' · draft','')+').\nObjective: be the bank they choose at their next money moment.\nDeliverables: audience, insight, territories, proof.');ta.focus();return}ask(k)});
+function copy(){const p=[...document.querySelectorAll('.pack')].pop();if(!p)return;const t=[...p.querySelectorAll('div')].map(d=>d.querySelector('small').textContent+': '+d.querySelector('p').textContent).join('\n');
+  const btn=[...document.querySelectorAll('.nx[data-k="copy"]')].pop();try{navigator.clipboard.writeText(t).then(()=>{if(btn)btn.textContent='Copied'},()=>{if(btn)btn.textContent='Couldn’t copy'})}catch(x){if(btn)btn.textContent='Couldn’t copy'}}
+
+/* sheet */
+const veil=$('#veil'),bt=$('#bt');
+function openSheet(){veil.classList.add('on');bt.value='';setTimeout(()=>bt.focus(),50)}
+function closeSheet(){veil.classList.remove('on')}
+$('#attach').addEventListener('click',openSheet);$('#cancel').addEventListener('click',closeSheet);
+veil.addEventListener('click',e=>{if(e.target===veil)closeSheet()});addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
+$('#sample').addEventListener('click',()=>{bt.value=BRIEF_SAMPLE});
+$('#attachok').addEventListener('click',()=>{const v=bt.value.trim()||BRIEF_SAMPLE;closeSheet();setBrief(v);ta.focus()});
+bt.addEventListener('dragover',e=>e.preventDefault());
+bt.addEventListener('drop',e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(!f)return;if(!/text|markdown/.test(f.type)&&!/\.(txt|md)$/i.test(f.name)){bt.value='Only text files can be read in this concept. Paste the brief instead.';return}const r=new FileReader();r.onload=()=>{bt.value=String(r.result).slice(0,4000)};r.readAsText(f)});
+
+
+
+
+/* ---------- parallel agents ---------- */
+const LANES=['Audience','Insight','Competition','Look ahead','Territories'];
+function runLanes(turn){const box=turn.querySelector('.lanes');if(!box)return;box.classList.add('on');
+  box.querySelectorAll('.lane').forEach((ln,i)=>{const bar=ln.querySelector('i'),em=ln.querySelector('em');const dur=reduce?0:2200+Math.random()*2400,delay=reduce?0:i*220;
+    setTimeout(()=>{em.textContent='Working';bar.style.transition=`width ${dur}ms cubic-bezier(.4,.1,.2,1)`;bar.style.width='100%'},delay);
+    setTimeout(()=>{em.textContent='Done';ln.classList.add('ok')},delay+dur)})}
+
+/* ---------- toast ---------- */
+let tT;function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(tT);tT=setTimeout(()=>el.classList.remove('on'),2800)}
+document.addEventListener('click',e=>{const w=e.target.closest('[data-watch]');if(w){const on=w.getAttribute('aria-pressed')!=='true';w.setAttribute('aria-pressed',on);const n=w.closest('.map').querySelector('.cap b').textContent;
+  toast(on?`Watching ${n}. You’ll hear when it moves.`:`Stopped watching ${n}.`)}
+  const nt=e.target.closest('[data-notify]');if(nt){const on=nt.getAttribute('aria-pressed')!=='true';nt.setAttribute('aria-pressed',on);toast(on?'You’ll get a read on each persona the day before.':'Flag removed.')}});
+
+/* ---------- sources sheet ---------- */
+const SRCD={'Brief':['Your brief, as attached','This conversation'],'Their files':['Brand tracker waves, research decks and personas in HSBC’s Open space','When a file changes'],
+ 'Money library':['HSBC public research, wealth reports and official statistics','Weekly'],'Market data':['Rates, FX, inflation and the policy calendar','Daily'],
+ 'WPP data':['Spend and audience datasets from the WPP catalogue','Monthly'],'Persona':['The team’s persona set; Hong Kong personas are drafts','As agreed with the team'],
+ 'Social listening (next)':['Public conversation about money','Next on the roadmap'],'Models (later)':['Forecasts trained on the history built in earlier steps','Last on the roadmap'],
+ 'Partner data':['Matched through InfoSum; nothing moves','Later']};
+function normSrc(n){n=n.trim();const m={'their files':'Their files','money library':'Money library','market data':'Market data','wpp data':'WPP data','persona':'Persona','brief':'Brief','models (later)':'Models (later)','social listening (next)':'Social listening (next)'};return m[n.toLowerCase()]||n}
+document.addEventListener('click',e=>{const b=e.target.closest('.srcbtn');if(!b)return;const list=b.dataset.srcs.split('·').map(normSrc);
+  $('#srclist').innerHTML=list.map(n=>{const d=SRCD[n]||['Source in the OpenFS library','—'];return `<div><b>${n}</b><span>${d[1]}</span><p>${d[0]}</p></div>`}).join('');$('#sveil').classList.add('on')});
+$('#sclose').addEventListener('click',()=>$('#sveil').classList.remove('on'));$('#sveil').addEventListener('click',e=>{if(e.target.id==='sveil')$('#sveil').classList.remove('on')});
+
+/* ---------- the deliverable ---------- */
+const DOC_CSS=`.dx{--i:#0A0A2E;--i2:#55586F;--i3:#9A9CB0;--h:rgba(10,10,46,.09);--f:rgba(10,10,46,.04);--geo:#6A55E8;--gen:#14A08F;--asset:#E0962A;--liq:#E0577F;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",Inter,"Segoe UI",system-ui,sans-serif;color:var(--i);letter-spacing:-.006em;line-height:1.5}
+.dx *{box-sizing:border-box;margin:0;padding:0}
+.dx .s{width:min(794px,100%);margin:0 auto 22px;background:#fff;border-radius:6px;box-shadow:0 1px 2px rgba(0,0,40,.12),0 20px 60px rgba(0,0,40,.18);padding:64px 68px 56px;position:relative;min-height:880px;display:flex;flex-direction:column}
+.dx .k{font-size:12.5px;color:var(--i3);margin-bottom:12px}
+.dx h1{font-weight:600;font-size:54px;letter-spacing:-.04em;line-height:1.02}
+.dx h2{font-weight:600;font-size:34px;letter-spacing:-.03em;line-height:1.1}
+.dx h3{font-weight:600;font-size:18px;letter-spacing:-.015em}
+.dx .le{font-size:19px;color:var(--i2);margin-top:14px;max-width:56ch}
+.dx p{font-size:15.5px}
+.dx .ft{margin-top:auto;padding-top:28px;display:flex;justify-content:space-between;font-size:11.5px;color:var(--i3)}
+.dx .rw{display:grid;grid-template-columns:150px 1fr;gap:22px;padding:16px 0;border-top:1px solid var(--h)}
+.dx .rw:last-child{border-bottom:1px solid var(--h)}
+.dx .rw small{font-size:12.5px;color:var(--i3);display:flex;align-items:center;gap:8px}
+.dx .rw small i{width:7px;height:7px;border-radius:50%}
+.dx .rw b{font-weight:500;display:block}
+.dx .rw p{color:var(--i2);font-size:14.5px;margin-top:2px}
+.dx .big{font-size:30px;font-weight:300;letter-spacing:-.02em;line-height:1.25;margin-top:30px}
+.dx .q{font-size:24px;font-weight:300;letter-spacing:-.015em;line-height:1.35;padding-left:20px;border-left:3px solid var(--geo);margin-top:24px}
+.dx .q cite{display:block;font-style:normal;font-size:13px;color:var(--i3);margin-top:8px}
+.dx .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:26px}
+.dx .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:26px}
+.dx .cd{background:var(--f);border-radius:16px;padding:18px}
+.dx .cd small{font-size:12px;color:var(--i3);display:block;margin-bottom:6px}
+.dx .cd b{font-weight:600;font-size:17px;display:block;letter-spacing:-.015em}
+.dx .cd p{font-size:14px;color:var(--i2);margin-top:6px}
+.dx .cd em{display:block;font-style:normal;font-size:15px;margin-top:12px;padding-top:12px;border-top:1px solid var(--h)}
+.dx .bar{display:grid;grid-template-columns:110px 1fr 70px;gap:14px;align-items:center;font-size:14px;margin-top:12px}
+.dx .bar span:nth-child(2){height:6px;border-radius:3px;background:var(--f);overflow:hidden}
+.dx .bar span:nth-child(2) i{display:block;height:100%;border-radius:3px}
+.dx .bar span:last-child{font-size:12.5px;color:var(--i3);text-align:right}
+.dx table{width:100%;border-collapse:collapse;margin-top:22px;font-size:14px}
+.dx th{text-align:left;font-weight:500;font-size:12.5px;color:var(--i3);padding:0 10px 10px 0;border-bottom:1px solid var(--h)}
+.dx td{padding:12px 10px 12px 0;border-bottom:1px solid var(--h);vertical-align:top}
+.dx svg{display:block;width:100%;height:auto}
+.dx .chk{display:flex;gap:10px;align-items:flex-start;padding:10px 0;font-size:15px}
+.dx .chk i{width:16px;height:16px;border-radius:5px;border:1.5px solid var(--i3);flex:none;margin-top:3px}
+.dx .tag{display:inline-block;font-size:12px;padding:3px 10px;border-radius:999px;background:var(--f);color:var(--i2)}
+.dx .tag.on{background:var(--i);color:#fff}
+.dx .cov{background:linear-gradient(160deg,#0A0A2E,#1B1B6B);color:#fff}
+.dx .cov .k{color:rgba(255,255,255,.6)}
+.dx .cov .le{color:rgba(255,255,255,.75)}
+.dx .cov .ft{color:rgba(255,255,255,.5)}
+@media (max-width:640px){.dx .s{padding:36px 26px;min-height:0}.dx h1{font-size:38px}.dx .g2,.dx .g3{grid-template-columns:1fr}.dx .rw{grid-template-columns:1fr;gap:4px}}
+@media print{body{background:#fff}.dx .s{box-shadow:none;margin:0;page-break-after:always;border-radius:0;width:100%}}`;
+function docDate(){return new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}
+function docHTML(){const N=9,ft=n=>`<div class="ft"><span>OpenFS · Response to brief · concept, illustrative content</span><span>${n} / ${N}</span></div>`;
+ const flows=`<svg viewBox="0 0 660 180" aria-hidden="true">${['#A99BFF','#5FE0CD','#FFC36B','#FF8DB0'].map((c,i)=>`<path d="M0 ${30+i*40} C 220 ${30+i*40}, 380 90, 660 90" fill="none" stroke="${c}" stroke-width="2.2" stroke-linecap="round" opacity=".9"/>`).join('')}<circle cx="652" cy="90" r="7" fill="#fff"/></svg>`;
+ const cone=`<svg viewBox="0 0 660 220" aria-label="Twelve-month outlook, illustrative"><line x1="280" y1="0" x2="280" y2="220" stroke="rgba(10,10,46,.1)"/><text x="286" y="14" font-size="11" fill="#9A9CB0">Now</text><text x="656" y="14" font-size="11" fill="#9A9CB0" text-anchor="end">In 12 months</text>
+  <path d="M280 150 L656 92 L656 172 Z" fill="#E0962A" opacity=".14"/><path d="M0 182 L28 178 L56 180 L84 172 L112 170 L140 174 L168 164 L196 160 L224 162 L252 154 L280 150" fill="none" stroke="#0A0A2E" stroke-width="2.2"/><path d="M280 150 L656 132" fill="none" stroke="#E0962A" stroke-width="2.2" stroke-dasharray="5 6"/></svg>`;
+ const comp=`<svg viewBox="0 0 660 260" aria-label="Positioning map, illustrative"><line x1="330" y1="8" x2="330" y2="252" stroke="rgba(10,10,46,.12)"/><line x1="8" y1="130" x2="652" y2="130" stroke="rgba(10,10,46,.12)"/><rect x="350" y="20" width="290" height="96" rx="14" fill="#14A08F" opacity=".12"/><text x="495" y="74" text-anchor="middle" font-size="13" font-weight="600" fill="#14A08F">Where customers are</text><g font-size="11" fill="#9A9CB0"><text x="648" y="122" text-anchor="end">Life moments</text><text x="12" y="122">Products and rates</text><text x="338" y="22">Premium</text><text x="338" y="246">Everyday</text></g><g font-size="12" fill="#55586F"><circle cx="110" cy="66" r="6" fill="#9A9CB0"/><text x="122" y="70">Competitor A</text><circle cx="190" cy="180" r="6" fill="#9A9CB0"/><text x="202" y="184">Competitor B</text><circle cx="80" cy="210" r="6" fill="#9A9CB0"/><text x="92" y="214">Competitor C</text><circle cx="390" cy="190" r="6" fill="#9A9CB0"/><text x="402" y="194">Competitor D</text><circle cx="470" cy="70" r="8" fill="#0A0A2E"/><text x="484" y="98" font-weight="600" fill="#0A0A2E">Proposed position</text></g></svg>`;
+ const bar=(n,k,v,l)=>`<div class="bar"><span>${n}</span><span><i style="width:${v}%;background:var(--${k})"></i></span><span>${l}</span></div>`;
+ return `<div class="dx">
+ <section class="s cov"><p class="k">OpenFS · Response to brief</p><div style="margin-top:160px"><h1>Make freed-up cash work.</h1><p class="le">A premium savings and investing proposition for UK emerging affluent customers, timed to the moments their money moves.</p></div><div style="margin-top:60px">${flows}</div>
+  <p style="font-size:13px;color:rgba(255,255,255,.65);margin-top:30px">Prepared for the HSBC Helix strategy team · ${docDate()}<br>Concept prototype. All content is illustrative and not based on real data.</p>${ft(1)}</section>
+ <section class="s"><p class="k">The answer</p><h2>Be there before the decision, not after it.</h2><p class="big">Emerging affluent customers are about to move money for the first time in years. Most will choose whoever reaches them first.</p>
+  <div class="g3"><div class="cd"><small>Recommend</small><b>Launch before the tax year closes</b><p>The window when cash, ISAs and fixed-rate deals all come into play.</p></div><div class="cd"><small>Recommend</small><b>Lead with moments, not products</b><p>Deal ending, first windfall, first family gift.</p></div><div class="cd"><small>Recommend</small><b>Win the first serious money</b><p>The first bank they move real money to keeps it.</p></div></div>${ft(2)}</section>
+ <section class="s"><p class="k">Who we’re talking to</p><h2>Emerging affluent, UK</h2><p class="le">Building wealth through salary and property, starting to think about investing and family money.</p>
+  <div style="margin-top:24px"><div class="rw"><small><i style="background:var(--liq)"></i>Liquidity</small><div><b>Deals ending</b><p>Fixed-rate mortgages rolling off force a choice: pay down, remortgage or release equity.</p></div></div><div class="rw"><small><i style="background:var(--asset)"></i>Asset class</small><div><b>Saving to investing</b><p>Interest in moving cash into ISAs and funds builds as the tax year closes.</p></div></div><div class="rw"><small><i style="background:var(--gen)"></i>Generations</small><div><b>First family money</b><p>Early talk of gifts and inheritance from parents starts to surface.</p></div></div></div>
+  <p class="q">“If someone showed me, in plain numbers, what my cash could be doing instead, and let me start small.”<cite>Simulated persona response, built from research</cite></p>
+  <p style="font-size:13.5px;color:var(--i3);margin-top:22px">Audience size not yet available: sizing needs partner data through InfoSum, a later step.</p>${ft(3)}</section>
+ <section class="s"><p class="k">Where the money is moving</p><h2>Liquidity and asset class lead.</h2><p class="le">How exposed this persona is to each of the four currents right now.</p>
+  <div style="margin-top:22px">${bar('Liquidity','liq',90,'Strong')}${bar('Asset class','asset',75,'Rising')}${bar('Generations','gen',45,'Building')}${bar('Geography','geo',15,'Quiet')}</div>
+  <div class="g2"><div class="cd"><small>This week</small><b>Fixed-rate deals are rolling off</b><p>A wave of remortgage decisions over the coming months.</p></div><div class="cd"><small>This week</small><b>Cash is edging towards investing</b><p>Easing savings rates make funds look better.</p></div></div>${ft(4)}</section>
+ <section class="s"><p class="k">Insight and tension</p><h2>The tension</h2><p class="q" style="border-color:var(--liq)">“I finally have money to move, and no idea who to trust with it.”</p>
+  <h2 style="margin-top:44px">The insight</h2><p class="big" style="margin-top:14px">The decision happens in a short window, and most people make it with whoever reaches them first.</p>
+  <div class="g2"><div class="cd"><small>Why now</small><b>Three moments line up</b><p>Tax-year end, rate decisions and deals rolling off all land in the same quarter.</p></div><div class="cd"><small>Why HSBC</small><b>Permission to talk about the next step</b><p>A premium voice that can make investing feel like the obvious move.</p></div></div>${ft(5)}</section>
+ <section class="s"><p class="k">Competitive space</p><h2>Rivals sell products. Customers want help with moments.</h2><div style="margin-top:26px">${comp}</div><p style="font-size:12.5px;color:var(--i3);margin-top:8px">Positions are illustrative, not an analysis of real brands.</p>
+  <div class="g2"><div class="cd"><small>The gap</small><b>Help at the moment money moves</b><p>Few speak to the deal ending or the first family gift.</p></div><div class="cd"><small>The risk</small><b>It’s open because it’s sensitive</b><p>Family money needs care in tone.</p></div></div>${ft(6)}</section>
+ <section class="s"><p class="k">Looking ahead · next 12 months</p><h2>More of this audience faces a decision.</h2><div style="margin-top:26px">${cone}</div><p style="font-size:12.5px;color:var(--i3);margin-top:8px">Illustrative cone, not a real forecast. Forecasting is the last step on the roadmap.</p>
+  <div style="margin-top:20px"><div class="rw"><small><span class="tag on">Likely</span></small><div><b>Savings start moving into investments</b></div></div><div class="rw"><small><span class="tag">Possible</span></small><div><b>A first home move or extension</b></div></div><div class="rw"><small><span class="tag">Watch</span></small><div><b>Rate cuts arrive faster than expected</b><p>Would bring the window forward.</p></div></div></div>${ft(7)}</section>
+ <section class="s"><p class="k">Territories</p><h2>Three ways in.</h2>
+  <div class="g3"><div class="cd" style="border-top:3px solid var(--liq)"><small>Territory 1</small><b>Before the deal ends</b><p>Meet remortgagers with a plan for the cash it frees up.</p><em>“Your fix is ending. Your money doesn’t have to sit still.”</em></div>
+  <div class="cd" style="border-top:3px solid var(--asset)"><small>Territory 2</small><b>Your next move</b><p>Make the step from saving to investing feel small and safe.</p><em>“Start with what you’d spend on a weekend away.”</em></div>
+  <div class="cd" style="border-top:3px solid var(--gen)"><small>Territory 3</small><b>Money that grows up with you</b><p>Talk about the family, not the account.</p><em>“The first gift deserves a plan.”</em></div></div>
+  <p style="font-size:13.5px;color:var(--i3);margin-top:22px">Example lines only. The creative work, and compliance review, sit with the team.</p>${ft(8)}</section>
+ <section class="s"><p class="k">Activation, sources and next steps</p><h2>Where and when.</h2>
+  <table><tr><th>Moment</th><th>Where</th><th>Message</th><th>When</th></tr><tr><td>Deal ending</td><td>App, email, mortgage journey</td><td>A plan for freed-up cash</td><td>3 months before expiry</td></tr><tr><td>Tax-year end</td><td>Social, search, app</td><td>Start small, start now</td><td>January to April</td></tr><tr><td>First family gift</td><td>Content, events</td><td>The first gift deserves a plan</td><td>Always on</td></tr></table>
+  <h3 style="margin-top:34px">Sources and confidence</h3><p style="font-size:14.5px;color:var(--i2);margin-top:6px">Medium confidence: sources agree on direction, not yet on size. Drawn from the brief, the team’s files, the money library and market data. Illustrative.</p>
+  <h3 style="margin-top:30px">Next steps</h3><div style="margin-top:8px"><div class="chk"><i></i>Agree the persona and moments with the strategy team</div><div class="chk"><i></i>Size the audience once partner data is connected</div><div class="chk"><i></i>Brief creative on the three territories</div><div class="chk"><i></i>Set OpenFS to flag the next rate decision for this persona</div></div>${ft(9)}</section>
+ </div>`}
+function docMD(){return `# Make freed-up cash work\n\n*Response to brief · OpenFS · ${docDate()}*\n\n> Concept prototype. All content is illustrative and not based on real data.\n\n## The answer\nBe there before the decision, not after it. Emerging affluent customers are about to move money for the first time in years; most will choose whoever reaches them first.\n\n- Launch before the tax year closes\n- Lead with moments, not products\n- Win the first serious money\n\n## Who we’re talking to\n**Emerging affluent, UK.** Building wealth through salary and property, starting to think about investing and family money.\n\n- **Liquidity · Deals ending:** fixed-rate mortgages rolling off force a choice.\n- **Asset class · Saving to investing:** interest in ISAs and funds builds as the tax year closes.\n- **Generations · First family money:** early talk of gifts and inheritance.\n\n> “If someone showed me, in plain numbers, what my cash could be doing instead, and let me start small.” (simulated persona response)\n\nAudience size not yet available: needs partner data through InfoSum, a later step.\n\n## Tension and insight\n**Tension:** “I finally have money to move, and no idea who to trust with it.”\n\n**Insight:** the decision happens in a short window, and most people make it with whoever reaches them first.\n\n## Competitive space\nRivals sell products. Customers want help with moments. The gap: help at the moment money moves. The risk: family money needs care in tone.\n\n## Looking ahead, next 12 months\n- Likely: savings start moving into investments\n- Possible: a first home move or extension\n- Watch: rate cuts arrive faster than expected\n\n## Territories\n1. **Before the deal ends.** “Your fix is ending. Your money doesn’t have to sit still.”\n2. **Your next move.** “Start with what you’d spend on a weekend away.”\n3. **Money that grows up with you.** “The first gift deserves a plan.”\n\n## Activation\n| Moment | Where | Message | When |\n|---|---|---|---|\n| Deal ending | App, email, mortgage journey | A plan for freed-up cash | 3 months before expiry |\n| Tax-year end | Social, search, app | Start small, start now | January to April |\n| First family gift | Content, events | The first gift deserves a plan | Always on |\n\n## Next steps\n- [ ] Agree the persona and moments with the strategy team\n- [ ] Size the audience once partner data is connected\n- [ ] Brief creative on the three territories\n- [ ] Set OpenFS to flag the next rate decision for this persona\n`}
+const dstyle=document.createElement('style');dstyle.textContent=DOC_CSS;document.head.appendChild(dstyle);
+function openDoc(){$('#rscroll').innerHTML=docHTML();$('#reader').classList.add('on');$('#rscroll').scrollTop=0}
+function closeDoc(){$('#reader').classList.remove('on')}
+$('#rclose').addEventListener('click',closeDoc);addEventListener('keydown',e=>{if(e.key==='Escape'){closeDoc();$('#sveil').classList.remove('on')}});
+let DL=null;
+(async()=>{try{if(window.claude&&claude.use){DL=await claude.use('downloads');if(DL)document.body.classList.add('can-dl')}}catch(e){}})();
+async function save(kind){if(!DL){toast('Downloads aren’t available in this view');return}
+  const name=kind==='md'?'OpenFS response to brief.md':'OpenFS response to brief.html';
+  const data=kind==='md'?docMD():`<!DOCTYPE html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>OpenFS · Response to brief</title><style>body{margin:0;background:#EEEEF3;padding:32px 16px}${DOC_CSS}</style></head><body>${docHTML()}</body></html>`;
+  try{await DL.save({filename:name,data});toast('Saved')}catch(err){toast(err&&err.code==='declined'?'Download cancelled':'Couldn’t download here')}}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-doc]');if(!b)return;const k=b.dataset.doc;if(k==='open')openDoc();else save(k)});
+document.addEventListener('keydown',e=>{const b=e.target.closest&&e.target.closest('.dthumb');if(b&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openDoc()}});
+
+/* ---------- corridors ---------- */
+const CITY={ld:['London',-0.1,51.5],dx:['Dubai',55.3,25.2],ml:['Mainland China',112,42],hk:['Hong Kong',114.2,22.3],sg:['Singapore',103.8,1.35]};
+const COR=[['ml','hk',1,'geo','Mainland China → Hong Kong','Life plans pulling savings south: work, study, protecting the family.','Strongest'],
+ ['dx','hk',.8,'geo','Middle East → Hong Kong','Gulf wealth diversifying into Asian hubs.','Strong'],
+ ['dx','sg',.6,'asset','Middle East → Singapore','The same flow, split across two hubs.','Growing'],
+ ['ld','hk',.55,'gen','UK ↔ Hong Kong','Families with a foot in both places; money follows children.','Steady'],
+ ['ld','dx',.4,'liq','UK → Middle East','Lifestyle and tax moves taking assets with them.','Watch']];
+const PX=(lon,lat)=>[(lon+15)/160*680+20,(62-lat)/67*250+18];
+const LAND='0007f8ffffffffffffffffffffc|0003fc07ffffffffffffffffffc|0302383fffffffffffffffffff0|0301b8fffffffffffffffffffc0|018080fffffffffffffffffff80|0cc0ffffffffffffffffffffff0|09e7ffffffffffffffffffffff8|019fffffffffffffffffffffff4|007fffffffffffffffffffffff0|00fffffffffffffffffffffffe0|007ffffc9ffffffffffffffffc0|007fcff89ffffffffffffffff88|0ff867f807fffffffffffffff0c|0ff039f8c3ffffffffffffff810|0fc089cfffffffffffffffdf018|0fc0008fffffffffffffff06010|0f80908ffffffffffffffff3030|027f80003fffffffffffffc3070|07ff80003fffffffffffffc0780|0fffe0807fffffffffffffe0c00|1ffff9f27fffffffffffffe0000|0fffffffffcfffffffffffe0000|3fffffffffcfffffffffffe0000|7fffffffbfe2ffffffffffc0000|ffffffff9ff13bffffffff80000|ffffffffcfff81ffffffff20000|ffffffffcfffc0fffdfffc20000|ffffffffefff801ff0ff9000000|ffffffffe7ff801fe0ff3000000|fffffffff3fe001fc07f8020000|fffffffff1f8001f005fc020000|fffffffff9e0000e001fe020000|fffffffffd00000f000fe028000|fffffffffc00000e0009e004000|fffffffffff0000600008048000|7ffffffffff0000500180004000|3fffffffffe0000100080014000|1fc7ffffffe0000000040184000|0000ffffffc0000000360380000|0000ffffff800000001a0f00000|0000ffffff000000000c1f81000|0000fffffc000000000e1f00000|0000fffffc00000000071f20200|00007ffff800000000038353bf8';
+const LANDD=(()=>{let d='';LAND.split('|').forEach((row,r)=>{for(let c=0;c<row.length*4;c++){if((parseInt(row[c>>2],16)>>(3-(c&3)))&1){const [x,y]=PX(-15+(c+.5)*1.5,62-(r+.5)*1.5);d+=`M${x.toFixed(1)} ${y.toFixed(1)}h0`}}});return d})();
+const EVT=[['ld','Rate decision ahead','liq'],['hk','Bonus season','asset'],['dx','Capital on the move','geo']];
+function corridors(uid,sel,o={}){let paths='',dots='',cities='',pulses='';
+  COR.forEach(([a,b,w,k,n],i)=>{const [x1,y1]=PX(CITY[a][1],CITY[a][2]),[x2,y2]=PX(CITY[b][1],CITY[b][2]);const mx=(x1+x2)/2,my=(y1+y2)/2,dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy);
+   const cx=mx+dy/L*-L*.28,cy=my-Math.abs(dx/L)*L*.28-8;const d=`M${x1.toFixed(1)} ${y1.toFixed(1)} Q${cx.toFixed(1)} ${cy.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}`;
+   paths+=`<g class="cor${sel===i?' on':''}" data-i="${i}" tabindex="0" role="button" aria-label="${n}"><path id="${uid}p${i}" class="ln" d="${d}" stroke="var(--${k})" stroke-width="${(1+w*3).toFixed(1)}" opacity="${(.3+w*.5).toFixed(2)}"/><path class="hit" d="${d}"/></g>`;
+   if(!reduce)for(let j=0;j<3;j++)dots+=`<circle r="${(1.6+w*1.6).toFixed(1)}" fill="var(--${k})"><animateMotion dur="${(5.5-w*2).toFixed(1)}s" begin="-${(j*(5.5-w*2)/3).toFixed(2)}s" repeatCount="indefinite"><mpath href="#${uid}p${i}"/></animateMotion></circle>`});
+  Object.entries(CITY).forEach(([id,[n,lo,la]])=>{const [x,y]=PX(lo,la);const r=id==='hk'?5:3.5;const anchor=id==='hk'?'start':id==='ml'?'middle':'start';
+   cities+=`<circle cx="${x}" cy="${y}" r="${r}" fill="var(--ink)"/><text class="city" x="${id==='ml'?x:x+9}" y="${id==='ml'?y-12:y+4}" text-anchor="${anchor}">${n}</text>`});
+  if(o.pulse&&!reduce)EVT.forEach(([id,n,k],i)=>{const [x,y]=PX(CITY[id][1],CITY[id][2]);pulses+=`<circle cx="${x}" cy="${y}" r="4" fill="none" stroke="var(--${k})" stroke-width="1.5"><animate attributeName="r" values="4;22" dur="2.8s" begin="${i*.9}s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0" dur="2.8s" begin="${i*.9}s" repeatCount="indefinite"/></circle>`});
+  const c=COR[sel==null?0:sel];
+  return `<div class="map${sel!=null?' pick':''}" data-uid="${uid}"><svg viewBox="0 0 720 290" role="img" aria-label="Wealth corridors map, illustrative"><defs><pattern id="${uid}g" width="12" height="12" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".9" fill="var(--ink3)" opacity=".35"/></pattern></defs><path d="${LANDD}" fill="none" stroke="var(--ink3)" stroke-opacity=".42" stroke-width="2.6" stroke-linecap="round"/>${paths}${dots}${pulses}${cities}</svg>
+   <div class="cap"><b>${c[4]}</b><span>${c[6]}</span><p>${c[5]}</p>${o.ask?'<button class="capbtn" data-k="corr">Ask about corridors</button>':''}</div><div style="margin-top:10px"><button class="wbtn" data-watch aria-pressed="false"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>Watch this corridor</button></div>${o.pulse?`<div class="pulse-k">${EVT.map(([id,n,k])=>`<span><i style="background:var(--${k})"></i>${CITY[id][0]} · ${n}</span>`).join('')}</div>`:''}<small style="display:block;font-size:12.5px;color:var(--ink3);margin-top:8px">Illustrative corridors and strengths, not real flow data</small></div>`}
+function pickCor(g){const m=g.closest('.map'),i=+g.dataset.i,c=COR[i];m.classList.add('pick');m.querySelectorAll('.cor').forEach(x=>x.classList.toggle('on',x===g));
+  const btn=m.querySelector('.capbtn');m.querySelector('.cap').innerHTML=`<b>${c[4]}</b><span>${c[6]}</span><p>${c[5]}</p>`+(btn?btn.outerHTML:'')}
+document.addEventListener('click',e=>{const g=e.target.closest('.cor');if(g)pickCor(g)});
+document.addEventListener('keydown',e=>{const g=e.target.closest&&e.target.closest('.cor');if(g&&(e.key==='Enter'||e.key===' ')){e.preventDefault();pickCor(g)}});
+$('#wkmap').innerHTML=corridors('wk',null,{pulse:true});
+
+/* ---------- talk to a persona ---------- */
+const TQ=['What would make you move your savings?','Who do you trust with money?','What worries you about the next year?'];
+const TA={ea:['If someone showed me, in plain numbers, what my cash could be doing instead, and let me start small.','My parents, a couple of friends, and honestly some finance creators online. Banks feel like they’re selling to me.','My fixed rate ending. I don’t know whether to overpay, remortgage or ride it out.'],
+ fam:['Knowing it’s still there if the boiler goes. Flexibility matters more than the best rate.','Each other, and my mum. She’s offered to help with the deposit and I want to get that right.','School costs, and whether we can afford the move we keep talking about.'],
+ biz:['A sale. Until then everything’s tied up in the business.','My accountant. Anyone else has to earn it.','Timing the exit. The rules keep changing and I don’t want to get it wrong.'],
+ mm:['Setting up properly here: an account, cover for the family, something for the kids’ education.','People who’ve made the move before me, and a bank that understands both sides of the border.','Rules changing on either side, and whether the move works out for the family.'],
+ gp:['A better rate somewhere else, or a currency move. I move money when it’s worth it.','Whoever makes it simplest across countries. I don’t have time for five apps.','Where I’ll be living in two years, and whether my money can follow me.']};
+let talkBusy=false;
+async function talk(pid,qi){if(talkBusy)return;talkBusy=true;const p=PM[pid],log=$('#tlog'),[a,b]=top2(p.w);
+  log.insertAdjacentHTML('beforeend',`<div class="bub me">${TQ[qi]}</div>`);await wait(350);
+  const el=document.createElement('div');el.className='bub them';el.innerHTML=`<span class="fa" style="background:linear-gradient(135deg,var(--${a}),var(--${b}))">${ini(p.n)}</span><span class="tx"><span class="typing"><i></i><i></i><i></i></span></span>`;log.appendChild(el);
+  el.scrollIntoView({block:'nearest',behavior:reduce?'auto':'smooth'});await wait(1100);const tx=el.querySelector('.tx');tx.textContent='';
+  for(const ch of TA[pid][qi]){tx.textContent+=ch;await wait(14)}talkBusy=false}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-tq]');if(b&&curP)talk(curP,+b.dataset.tq)});
+
+/* ---------- suggestions under the chat ---------- */
+const DEF=[['UK emerging affluent','uk'],['Wealth corridors','corr'],['Next rate decision','event'],['Early signals','trends'],['Ask a persona','askp:ea'],['Hand it a brief','brief']];
+function setSugg(list){$('#sugg').innerHTML=list.map(([l,k])=>`<button data-k="${k}">${l}</button>`).join('')}
+setSugg(DEF);
+
+/* ---------- personas, today, ahead ---------- */
+const P=[
+ {id:'ea',n:'Emerging affluent',m:'UK',w:{liq:1,asset:.8,gen:.45,geo:.15},sl:.9,
+  moment:'Their fixed rate ends just as real savings start to pile up.',say:'Make freed-up cash work, without the jargon.',meet:'In the app on payday, and during a property search.',
+  head:'Cash is about to move, and they haven’t chosen where.',
+  ahead:{m3:[['Likely','A remortgage decision for many as deals roll off'],['Possible','First ISA or fund opened before the tax year ends']],
+   y1:[['Likely','Savings start moving into investments'],['Possible','A first home move or extension']],
+   y3:[['Likely','Pension and workplace savings outgrow cash'],['Watch','Early family money arrives as gifts']],
+   y5:[['Possible','Crossing into the wealthy bracket for a share of them'],['Watch','Inheritance starts to land, often as property']]}},
+ {id:'fam',n:'Growing family',m:'UK',w:{gen:1,liq:.8,asset:.4,geo:.15},sl:.6,
+  moment:'A bigger home, a second child, grandparents offering help.',say:'Plan for the family, not just the account.',meet:'Life admin moments: school places, moving home.',
+  head:'Family money is starting to move between generations.',
+  ahead:{m3:[['Likely','Costs squeeze savings around school terms'],['Possible','Help from parents towards a home']],
+   y1:[['Likely','A move to a bigger home'],['Possible','Junior savings and protection taken out']],
+   y3:[['Likely','Gifting from grandparents becomes regular'],['Watch','One partner steps back from work']],
+   y5:[['Possible','Inheritance planning conversations begin'],['Watch','University saving becomes urgent']]}},
+ {id:'biz',n:'Business owner',m:'UK',w:{liq:.9,asset:.7,gen:.6,geo:.35},sl:1.1,
+  moment:'Selling or passing on the business turns it into cash.',say:'What happens after the sale matters as much as the deal.',meet:'Through advisers, accountants and industry events.',
+  head:'Illiquid wealth is close to becoming liquid.',
+  ahead:{m3:[['Possible','Tax changes bring forward a sale'],['Watch','Cash buffers drawn down']],
+   y1:[['Likely','Owners near retirement start exit planning'],['Possible','A sale releases cash in one go']],
+   y3:[['Likely','Sale proceeds look for long-term homes'],['Watch','Succession passes the firm to family']],
+   y5:[['Possible','A new wealthy client with complex needs'],['Watch','Proceeds spread across family']]}},
+ {id:'mm',n:'Mainland mover',m:'Hong Kong · draft',w:{geo:1,asset:.55,gen:.5,liq:.3},sl:1.2,
+  moment:'Moving for work or study and setting up a life in the city.',say:'Everything for a new start, in one place.',meet:'Relocation, school searches and cross-border apps.',
+  head:'Their life plans are pulling savings across the border.',
+  ahead:{m3:[['Likely','New arrivals open first accounts'],['Possible','Currency moves change the timing']],
+   y1:[['Likely','Protection and savings products in demand'],['Possible','Family members follow']],
+   y3:[['Likely','Property and education saving build'],['Watch','Policy changes to cross-border schemes']],
+   y5:[['Possible','Settled families become wealth clients'],['Watch','Money flows back if conditions change']]}},
+ {id:'gp',n:'Global professional',m:'Hong Kong · draft',w:{asset:.9,geo:.8,liq:.5,gen:.25},sl:.8,
+  moment:'Bonuses stack up across currencies and markets.',say:'Your money, working across the places you live.',meet:'Work travel, investing apps and premium banking.',
+  head:'Their money already lives in more than one market.',
+  ahead:{m3:[['Likely','Bonus season puts cash in motion'],['Possible','FX swings prompt moving money home']],
+   y1:[['Likely','More investing across markets'],['Possible','A move to another hub']],
+   y3:[['Likely','Assets consolidated with one bank'],['Watch','Family plans shift where money sits']],
+   y5:[['Possible','A wealth client across two or three markets'],['Watch','Retirement planning across borders']]}}
+];
+const PM={};P.forEach(p=>PM[p.id]=p);
+const top2=w=>Object.entries(w).sort((a,b)=>b[1]-a[1]).slice(0,2).map(e=>e[0]);
+const ini=n=>n.split(' ').map(x=>x[0]).join('').toUpperCase();
+function chips(el,fn){el.innerHTML=P.map(p=>{const [a,b]=top2(p.w);return `<button class="pp" data-pid="${p.id}" aria-pressed="false"><span class="ring"><span class="face" style="background:linear-gradient(135deg,var(--${a}),var(--${b}))">${ini(p.n)}</span></span><span>${p.n}<small>${p.m}</small></span></button>`}).join('');
+  el.addEventListener('click',e=>{const b=e.target.closest('.pp');if(b)fn(b.dataset.pid)})}
+function press(el,id){el.querySelectorAll('.pp').forEach(b=>b.setAttribute('aria-pressed',b.dataset.pid===id))}
+function mini(vals,col){const w=110,h=32,mx=Math.max(...vals),mn=Math.min(...vals);const pts=vals.map((v,i)=>`${(i*w/(vals.length-1)).toFixed(1)},${(h-4-(v-mn)/(mx-mn||1)*(h-8)).toFixed(1)}`).join(' ');return `<svg viewBox="0 0 ${w} ${h}" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="${col}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`}
+const SIGS=[['liq','Fixed-rate deals are rolling off','A wave of remortgage decisions over the coming months.',[3,4,4,5,6,6,8,9]],
+ ['asset','Cash is edging towards investing','Easing savings rates make funds look better.',[5,5,6,6,7,8,8,9]],
+ ['gen','Family money is moving earlier','More gifting while parents are alive.',[4,4,5,5,5,6,7,7]],
+ ['geo','Mainland savers look south','Interest in Hong Kong products keeps building.',[3,4,5,5,6,7,8,9]]];
+$('#sigs').innerHTML=SIGS.map(([k,t,p,v])=>`<div class="sig"><span class="c" style="font-size:13px;color:var(--ink3);display:flex;align-items:center;gap:8px"><i style="width:7px;height:7px;border-radius:50%;background:var(--${k})"></i>${NAME[k]}</span><div><b>${t}</b><p>${p}</p></div>${mini(v,'var(--'+k+')')}</div>`).join('')+'<p style="font-size:12.5px;color:var(--ink3);margin-top:10px">Illustrative signals, not real data.</p>';
+{const d=new Date(),m=new Date(d);m.setDate(d.getDate()-((d.getDay()+6)%7));$('#tdate').textContent='Week of '+m.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})}
+
+class Lens{
+  constructor(cv){this.cv=cv;this.ctx=cv.getContext('2d');this.t=0;this.a=0;this.ta=0;this.w={geo:.6,gen:.6,asset:.6,liq:.6};this.tw={...this.w};this.out=['geo','liq'];this.live=false;
+    this.p=[];KEYS.forEach((k,i)=>{for(let j=0;j<55;j++)this.p.push({i,k,x:Math.random(),v:.1+Math.random()*.18,s:.6+Math.random(),lane:j%3})});
+    this.col();this.loop=this.loop.bind(this)}
+  col(){this.c={};KEYS.forEach(k=>this.c[k]=css('--'+k));this.ink=css('--ink')}
+  resize(){const d=Math.min(devicePixelRatio||1,2),b=this.cv.getBoundingClientRect();this.cv.width=Math.max(1,b.width*d);this.cv.height=Math.max(1,b.height*d);this.d=d}
+  start(){if(this.live)return;this.live=true;this.resize();requestAnimationFrame(this.loop)}
+  stop(){this.live=false}
+  set(p){if(!p){this.ta=0;return}KEYS.forEach(k=>this.tw[k]=.2+.8*(p.w[k]||0));this.out=top2(p.w);this.ta=1;this.burst=1}
+  loop(){if(!this.live)return;const L=(a,b,f)=>a+(b-a)*f;this.a=L(this.a,this.ta,.035);KEYS.forEach(k=>this.w[k]=L(this.w[k],this.tw[k],.05));this.burst=(this.burst||0)*.97;this.t+=reduce?0:.016;this.draw();if(!reduce)requestAnimationFrame(this.loop)}
+  draw(){const {ctx}=this,W=this.cv.width,H=this.cv.height,cx=W/2,cy=H/2,d=this.d,R=44*d;ctx.clearRect(0,0,W,H);
+    for(const q of this.p){if(!reduce)q.x+=q.v*.01*(1+this.burst*2);if(q.x>1){q.x-=1}
+      let x,y,col,al,rad;
+      if(q.x<.5){const u=q.x/.5,off=(q.i-1.5)*H*.24;x=u*(cx-R*.6);y=cy+off*Math.pow(1-u,1.3)+Math.sin(u*6+this.t*1.4+q.i)*H*.05*(1-u);
+        col=this.c[q.k];al=(.2+.7*u)*(.3+.7*this.w[q.k]);rad=q.s*d*(1+this.w[q.k])}
+      else{const u=(q.x-.5)/.5;const lo=(q.lane-1)*H*.26;x=cx+R*.6+u*(W-cx-R*.6);y=cy+lo*Math.pow(u,.9)+Math.sin(u*5+this.t*1.2+q.lane)*H*.03*u;
+        col=this.c[this.out[q.lane%2]];al=(.85-.55*u)*this.a;rad=q.s*d*(1.2+this.a*.9)}
+      if(al<=.01)continue;ctx.beginPath();ctx.arc(x,y,rad,0,Math.PI*2);ctx.fillStyle=homeOrb.hex(col,al);ctx.fill()}
+    const g=ctx.createRadialGradient(cx,cy,R*.8,cx,cy,R*2.4);g.addColorStop(0,homeOrb.hex(this.c[this.out[0]],.28*this.a+.05));g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(cx-R*2.4,cy-R*2.4,R*4.8,R*4.8)}
+}
+const lens=new Lens($('#lens canvas'));
+let lensBusy=false,curP=null;
+chips($('#ppl1'),id=>activate(id));
+async function activate(id){if(lensBusy)return;const p=PM[id];if(!p)return;lensBusy=true;curP=id;press($('#ppl1'),id);$('#ppl1').scrollIntoView({block:'start',behavior:reduce?'auto':'smooth'});
+  const core=$('#core'),[a,b]=top2(p.w);core.classList.remove('empty');core.style.background=`linear-gradient(135deg,var(--${a}),var(--${b}))`;core.textContent=ini(p.n);
+  core.classList.remove('pulse');void core.offsetWidth;core.classList.add('pulse');
+  lens.set(null);$('#act').innerHTML='';const st=$('#lstat');
+  for(const t of ['Filtering by what '+p.n.toLowerCase()+' hold','Matching their money moments','Activating for them']){st.innerHTML=`<span class="shim">${t}</span>`;await wait(700)}
+  lens.set(p);st.textContent='';
+  $('#act').innerHTML=`<div class="act"><h3>${p.head}</h3><div class="exp">${top2(p.w).map(k=>`<span><i style="background:var(--${k})"></i>Most exposed to ${NAME[k].toLowerCase()}</span>`).join('')}</div>
+   <div class="rows" style="margin-top:20px">
+    <div class="row"><span class="c">The moment</span><div><b>${p.moment}</b></div></div>
+    <div class="row"><span class="c">What to say</span><div><b>${p.say}</b></div></div>
+    <div class="row"><span class="c">Where to meet them</span><div><b>${p.meet}</b></div></div></div>
+   <div class="talk" id="talk"><h4>Ask ${p.n.toLowerCase()}</h4><div class="q">${TQ.map((q,i)=>`<button class="nx" data-tq="${i}">${q}</button>`).join('')}</div><div class="log" id="tlog"></div><small>Simulated from research. Use it to explore, not to decide.</small></div>
+   <div class="next"><button class="nx" data-k="ahead:${p.id}">Look ahead for them</button><button class="nx" data-k="pbrief:${p.id}">Draft a brief for them</button></div>
+   ${foot(p.m.includes('draft')?2:3,p.m.includes('draft')?'draft persona, thinner data':'sources agree on direction','Money library · market data · persona','Available in the quick win')}</div>`;
+  lensBusy=false}
+
+/* ahead */
+let aP='ea',aH='y1',fanBusy=false;
+const HZ={m3:{n:'3 months',f:.25,c:4},y1:{n:'1 year',f:.6,c:3},y3:{n:'3 years',f:1.15,c:2},y5:{n:'5 years',f:1.7,c:1}};
+chips($('#ppl2'),id=>pickAhead(id));
+$('#hz').addEventListener('click',e=>{const b=e.target.closest('[data-h]');if(b)pickH(b.dataset.h)});
+function pickH(h){aH=h;$('#hz').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.h===h));forecast()}
+function pickAhead(id){if(!PM[id])return;aP=id;press($('#ppl2'),id);forecast()}
+function fanPaths(p,h){const W=720,H=260,x0=300,x1=700,base=205;const hist=[0,4,3,8,9,7,12,15,14,18,21,24].map((v,i)=>[i*x0/11,base-v*p.sl*1.2]);
+  const last=hist[hist.length-1],f=HZ[h].f,n=12;const mid=[],up=[],dn=[];
+  for(let i=0;i<=n;i++){const u=i/n,x=x0+u*(x1-x0),y=last[1]-u*f*32*p.sl,sp=6+u*f*44;mid.push([x,Math.max(14,y)]);up.push([x,Math.max(6,y-sp)]);dn.push([x,Math.min(H-6,y+sp)])}
+  const P2=a=>a.map((q,i)=>(i?'L':'M')+q[0].toFixed(1)+' '+q[1].toFixed(1)).join(' ');
+  const cone=P2(up)+' '+dn.slice().reverse().map(q=>'L'+q[0].toFixed(1)+' '+q[1].toFixed(1)).join(' ')+' Z';
+  return {hist:P2(hist),mid:P2(mid),cone,end:mid[mid.length-1]}}
+function drawFan(){const p=PM[aP],{hist,mid,cone,end}=fanPaths(p,aH),[a]=top2(p.w);
+  const el=$('#fan');if(!el.querySelector('svg')){el.innerHTML=`<svg viewBox="0 0 720 260" role="img" aria-label="Forecast cone, illustrative"><defs><linearGradient id="fg" x1="0" x2="1"><stop offset="0" stop-opacity=".28"/><stop offset="1" stop-opacity=".06"/></linearGradient></defs>
+   <line x1="300" y1="0" x2="300" y2="260" stroke="var(--hair)" stroke-width="1"/><text x="306" y="14" font-size="12" fill="var(--ink3)">Now</text>
+   <path class="c" fill="url(#fg)"/><path class="h" fill="none" stroke="var(--ink)" stroke-width="2.2" stroke-linecap="round"/><path class="m" fill="none" stroke-width="2.2" stroke-dasharray="5 6" stroke-linecap="round"/>
+   <text class="e" x="700" y="14" font-size="12" text-anchor="end" fill="var(--ink3)"></text><text x="0" y="14" font-size="12" fill="var(--ink3)">Past year</text></svg><small>Money in motion for this persona · illustrative cone, not a real forecast</small>`}
+  const svg=el.querySelector('svg');svg.querySelector('stop').setAttribute('stop-color',`var(--${a})`);svg.querySelectorAll('stop')[1].setAttribute('stop-color',`var(--${a})`);
+  svg.querySelector('path.h').setAttribute('d',hist);svg.querySelector('path.m').setAttribute('d',mid);svg.querySelector('path.m').setAttribute('stroke',`var(--${a})`);svg.querySelector('path.c').setAttribute('d',cone);
+  svg.querySelector('text.e').textContent='In '+HZ[aH].n}
+async function forecast(){if(fanBusy)return;fanBusy=true;const p=PM[aP],h=HZ[aH];press($('#ppl2'),aP);
+  $('#fstat').innerHTML=`<span class="shim">Running the forecast for ${p.n.toLowerCase()} over ${h.n}</span>`;$('#pred').style.opacity=.35;
+  await wait(800);drawFan();$('#fstat').textContent='';
+  $('#pred').style.opacity=1;$('#pred').innerHTML=`<div class="rows" style="margin-top:24px">${p.ahead[aH].map(([l,t])=>`<div class="row"><span class="c"><span class="lk ${l==='Likely'?'l1':''}">${l}</span></span><div><b>${t}</b></div></div>`).join('')}</div>
+   <p class="aside">The further out, the wider the cone. Built from the persona, the four currents, the money library and past cycles.</p>
+   ${foot(h.c,h.c>2?'near-term signals are clearer':'long horizons are directional','Persona · money library · market data · models (later)','Last on the roadmap')}`;
+  fanBusy=false}
+$('#pred').style.transition='opacity .4s';
+
+/* views */
+let view='ask';
+function show(v){view=v;document.querySelectorAll('.seg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===v));
+  $('#stage').style.display=v==='ask'?'':'none';$('#today').classList.toggle('on',v==='today');$('#ahead').classList.toggle('on',v==='ahead');
+  document.querySelector('.dock').style.display=v==='ask'?'':'none';
+  if(v==='today'){lens.start()}else lens.stop();
+  if(v==='ahead'&&!$('#fan').querySelector('svg')){pickAhead(aP)}}
+document.querySelector('.seg').addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(b)show(b.dataset.v)});
+
+/* play */
+$('#play').addEventListener('click',async()=>{if(playing){playing=false;$('#play span').textContent='Play';return}if(busy)return;playing=true;$('#play span').textContent='Stop';show('ask');reset();await wait(900);
+  const seq=['uk','corr','TODAY','AHEAD','BRIEF','DOC'];
+  for(const k of seq){if(!playing)break;
+    if(k==='BRIEF'){openSheet();await wait(700);for(const ch of BRIEF_SAMPLE){if(!veil.classList.contains('on'))break;bt.value+=ch;await wait(9)}await wait(600);closeSheet();setBrief(BRIEF_SAMPLE);await typeIn('Take this and come back with a draft');run('brief','Take this and come back with a draft')}
+    else if(k==='TODAY'){show('today');await wait(1600);const g=document.querySelector('#wkmap .cor[data-i="1"]');if(g){g.scrollIntoView({block:'center',behavior:'smooth'});await wait(900);pickCor(g)}await wait(2600);if(!playing)break;await activate('ea');await wait(2600);if(!playing)break;$('#talk').scrollIntoView({block:'center',behavior:'smooth'});await wait(800);await talk('ea',2);await wait(2600);if(!playing)break;await activate('mm');await wait(2200);await talk('mm',0);await wait(2600);continue}
+    else if(k==='DOC'){openDoc();const sc=$('#rscroll');for(let y=0;y<6&&playing;y++){await wait(1500);sc.scrollTop+=sc.clientHeight*.9}await wait(1500);closeDoc();continue}
+    else if(k==='AHEAD'){show('ahead');pickAhead('ea');await wait(2200);for(const h of ['m3','y3','y5']){if(!playing)break;pickH(h);await wait(2600)}show('ask');await wait(600);continue}
+    else await ask(k);
+    while(busy)await wait(100);await wait(4200)}
+  playing=false;$('#play span').textContent='Play'});
+function reset(){if(busy)return;thread.innerHTML='';minis.forEach(m=>m.stop());minis=[];const h=$('#home');h.style.display='';requestAnimationFrame(()=>h.classList.remove('gone'));$('#sugg').classList.remove('dim');setSugg(DEF);homeOrb.set('idle');if(!homeOrb.live){homeOrb.live=true;homeOrb.resize();requestAnimationFrame(homeOrb.loop)}if(!feed.live){feed.live=true;feed.resize();requestAnimationFrame(feed.loop)}brief=null;chip.classList.remove('on');ta.value='';fit();stage.scrollTop=0}
+$('#reset').addEventListener('click',()=>{playing=false;$('#play span').textContent='Play';show('ask');reset()});
+$('#theme').addEventListener('click',()=>{const r=document.documentElement;r.dataset.theme=modeName()==='dark'?'light':'dark';r.dataset.mode=r.dataset.theme;try{localStorage.setItem('ofs2',r.dataset.theme)}catch(e){};homeOrb.col();feed.col();lens.col();minis.forEach(m=>{m.col();m.draw()})});
+try{const t=localStorage.getItem('ofs2');if(t){document.documentElement.dataset.theme=t;document.documentElement.dataset.mode=t;homeOrb.col()}}catch(e){}
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{document.documentElement.dataset.mode=modeName();homeOrb.col()});
+fit();
+})();
+</script>
+</body>
+</html>
